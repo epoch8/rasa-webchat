@@ -85,7 +85,7 @@ class Widget extends Component {
   }
 
   componentDidUpdate() {
-    const { isChatOpen, dispatch, embedded, initialized } = this.props;
+    const { isChatOpen, dispatch, embedded, initialized, openOnStart, wasOpened } = this.props;
 
     if (isChatOpen) {
       if (!initialized) {
@@ -94,7 +94,7 @@ class Widget extends Component {
       this.trySendInitPayload();
     }
 
-    if (embedded && initialized) {
+    if ((embedded && initialized) || (openOnStart && initialized && !wasOpened)) {
       dispatch(showChat());
       dispatch(openChat());
     }
@@ -328,9 +328,9 @@ class Widget extends Component {
 
             const ElemIsInViewPort = (
               rectangle.top >= 0 &&
-                rectangle.left >= 0 &&
-                rectangle.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
-                rectangle.right <= (window.innerWidth || document.documentElement.clientWidth)
+              rectangle.left >= 0 &&
+              rectangle.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+              rectangle.right <= (window.innerWidth || document.documentElement.clientWidth)
             );
             if (!ElemIsInViewPort) {
               elements[0].scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' });
@@ -454,11 +454,12 @@ class Widget extends Component {
       isChatVisible,
       embedded,
       connected,
-      dispatch
+      dispatch,
+      openOnStart
     } = this.props;
 
     // Send initial payload when chat is opened or widget is shown
-    if (!initialized && connected && ((isChatOpen && isChatVisible) || embedded)) {
+    if (!initialized && connected && ((isChatOpen && isChatVisible) || embedded || openOnStart)) {
       // Only send initial payload if the widget is connected to the server but not yet initialized
 
       const sessionId = this.getSessionId();
@@ -621,7 +622,8 @@ const mapStateToProps = state => ({
   oldUrl: state.behavior.get('oldUrl'),
   pageChangeCallbacks: state.behavior.get('pageChangeCallbacks'),
   domHighlight: state.metadata.get('domHighlight'),
-  messages: state.messages
+  messages: state.messages,
+  wasOpened: state.behavior.get('wasOpened')
 });
 
 Widget.propTypes = {
@@ -660,7 +662,9 @@ Widget.propTypes = {
   defaultHighlightAnimation: PropTypes.string,
   defaultHighlightCss: PropTypes.string,
   defaultHighlightClassname: PropTypes.string,
-  messages: ImmutablePropTypes.listOf(ImmutablePropTypes.map)
+  messages: ImmutablePropTypes.listOf(ImmutablePropTypes.map),
+  openOnStart: PropTypes.bool,
+  wasOpened: PropTypes.bool
 };
 
 Widget.defaultProps = {
@@ -690,7 +694,8 @@ Widget.defaultProps = {
     100% {
       outline-color: green;
     }
-  }`
+  }`,
+  wasOpened: false
 };
 
 export default connect(mapStateToProps, null, null, { forwardRef: true })(Widget);

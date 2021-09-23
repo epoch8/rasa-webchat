@@ -155,6 +155,7 @@ const ConnectedWidget = forwardRef((props, ref) => {
           defaultHighlightCss={props.defaultHighlightCss}
           defaultHighlightAnimation={props.defaultHighlightAnimation}
           defaultHighlightClassname={props.defaultHighlightClassname}
+          openOnStart={props.openOnStart}
         />
       </ThemeContext.Provider>
     </Provider>
@@ -208,7 +209,8 @@ ConnectedWidget.propTypes = {
   userTextColor: PropTypes.string,
   userBackgroundColor: PropTypes.string,
   assistTextColor: PropTypes.string,
-  assistBackgoundColor: PropTypes.string
+  assistBackgoundColor: PropTypes.string,
+  openOnStart: PropTypes.bool
 };
 
 ConnectedWidget.defaultProps = {
@@ -254,7 +256,8 @@ ConnectedWidget.defaultProps = {
   userTextColor: '',
   userBackgroundColor: '',
   assistTextColor: '',
-  assistBackgoundColor: ''
+  assistBackgoundColor: '',
+  openOnStart: false
 };
 
 export default ConnectedWidget;

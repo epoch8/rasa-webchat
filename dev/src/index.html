@@ -6,9 +6,14 @@
       const load = () => {
         if (!WebChat) setTimeout(load, 100);
         if (WebChat) WebChat.default({
-          customData:{language:"en"},
-          socketUrl:"http://localhost:5005",
-          withRules: true,
+          // customData:{language:"en"},
+          // withRules: true,
+          socketUrl: "https://bf-rasa-rtk.chatbot.epoch8.co",
+          initPayload: "/get_started",
+          title: null,
+          subtitle: null,
+          openOnStart: (window.screen.width > 800)
+          // embedded: true
         });
       }
       setTimeout(load, 200);

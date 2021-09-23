@@ -158,7 +158,8 @@ export const rasaWebchatProTypes = {
       })
     })
   ),
-  triggerEventListenerUpdateRate: PropTypes.number
+  triggerEventListenerUpdateRate: PropTypes.number,
+  openOnStart: PropTypes.bool
 };
 
 RasaWebchatProWithRules.propTypes = {
@@ -199,7 +200,8 @@ export const rasaWebchatProDefaultTypes = {
   tooltipDelay: 500,
   withRules: true,
   rules: null,
-  triggerEventListenerUpdateRate: 500
+  triggerEventListenerUpdateRate: 500,
+  openOnStart: false
 };
 
 export default React.forwardRef((props, ref) => (
@@ -213,7 +215,7 @@ export const selfMount = (props, element = null) => {
       node.setAttribute('id', 'rasaWebchatPro');
       document.body.appendChild(node);
     }
-    const mountElement = element || document.getElementById('rasaWebchatPro')
+    const mountElement = element || document.getElementById('rasaWebchatPro');
     const webchatPro = React.createElement(RasaWebchatProWithRules, props);
     ReactDOM.render(webchatPro, mountElement);
   };

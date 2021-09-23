@@ -20,7 +20,8 @@ export default function (
     unreadCount: 0,
     messageDelayed: false,
     oldUrl: '',
-    pageChangeCallbacks: Map()
+    pageChangeCallbacks: Map(),
+    wasOpened: false
   });
 
   return function reducer(state = initialState, action) {
@@ -46,7 +47,7 @@ export default function (
       }
       case actionTypes.OPEN_CHAT: {
         if (onWidgetEvent.onChatOpen) onWidgetEvent.onChatOpen();
-        return storeParams(state.update('isChatOpen', () => true).set('unreadCount', 0));
+        return storeParams(state.merge({ isChatOpen: true, wasOpened: true }).set('unreadCount', 0));
       }
       case actionTypes.CLOSE_CHAT: {
         if (onWidgetEvent.onChatClose) onWidgetEvent.onChatClose();
