@@ -8,12 +8,14 @@
         if (WebChat) WebChat.default({
           // customData:{language:"en"},
           // withRules: true,
-          socketUrl: "https://bf-rasa-rtk.chatbot.epoch8.co",
+          socketUrl: "https://bf-rasa-dev.chatbot.epoch8.co",
           initPayload: "/get_started",
           title: null,
           subtitle: null,
-          openOnStart: (window.screen.width > 800)
-          // embedded: true
+          openOnStart: (window.screen.width > 800),
+          mainColor: '#00FF00',
+          userBackgroundColor: '#007700',
+          rectangularWidget: true,
         });
       }
       setTimeout(load, 200);

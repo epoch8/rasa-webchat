@@ -159,6 +159,13 @@ export const rasaWebchatProTypes = {
     })
   ),
   triggerEventListenerUpdateRate: PropTypes.number,
+  mainColor: PropTypes.string,
+  conversationBackgroundColor: PropTypes.string,
+  userTextColor: PropTypes.string,
+  userBackgroundColor: PropTypes.string,
+  assistTextColor: PropTypes.string,
+  assistBackgoundColor: PropTypes.string,
+  rectangularWidget: PropTypes.bool,
   openOnStart: PropTypes.bool
 };
 
@@ -201,6 +208,13 @@ export const rasaWebchatProDefaultTypes = {
   withRules: true,
   rules: null,
   triggerEventListenerUpdateRate: 500,
+  mainColor: '',
+  conversationBackgroundColor: '',
+  userTextColor: '',
+  userBackgroundColor: '',
+  assistTextColor: '',
+  assistBackgoundColor: '',
+  rectangularWidget: false,
   openOnStart: false
 };
 

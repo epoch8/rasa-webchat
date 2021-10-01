@@ -121,7 +121,8 @@ const ConnectedWidget = forwardRef((props, ref) => {
           userTextColor: props.userTextColor,
           userBackgroundColor: props.userBackgroundColor,
           assistTextColor: props.assistTextColor,
-          assistBackgoundColor: props.assistBackgoundColor }}
+          assistBackgoundColor: props.assistBackgoundColor,
+          rectangularWidget: props.rectangularWidget }}
       >
         <Widget
           ref={ref}
@@ -210,6 +211,7 @@ ConnectedWidget.propTypes = {
   userBackgroundColor: PropTypes.string,
   assistTextColor: PropTypes.string,
   assistBackgoundColor: PropTypes.string,
+  rectangularWidget: PropTypes.bool,
   openOnStart: PropTypes.bool
 };
 
@@ -257,6 +259,7 @@ ConnectedWidget.defaultProps = {
   userBackgroundColor: '',
   assistTextColor: '',
   assistBackgoundColor: '',
+  rectangularWidget: false,
   openOnStart: false
 };
 
