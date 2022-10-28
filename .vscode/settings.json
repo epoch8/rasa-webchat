@@ -1,4 +1,7 @@
 {
+    "files.exclude": {
+        "**/node_modules": true
+    },
     "eslint.autoFixOnSave": true,
     "prettier.singleQuote": true,
     "prettier.jsxBracketSameLine": true,

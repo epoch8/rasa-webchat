@@ -38,6 +38,7 @@ import { SESSION_NAME, NEXT_MESSAGE } from 'constants';
 import { isVideo, isImage, isButtons, isText, isCarousel } from './msgProcessor';
 import WidgetLayout from './layout';
 import { storeLocalSession, getLocalSession } from '../../store/reducers/helper';
+import STTController from '../../stt/STTController';
 
 class Widget extends Component {
   constructor(props) {
@@ -664,7 +665,11 @@ Widget.propTypes = {
   defaultHighlightClassname: PropTypes.string,
   messages: ImmutablePropTypes.listOf(ImmutablePropTypes.map),
   openOnStart: PropTypes.bool,
-  wasOpened: PropTypes.bool
+  wasOpened: PropTypes.bool,
+  voiceInputEnabled: PropTypes.bool,
+  voiceInputConfig: PropTypes.shape({}),
+  voiceInputStopOnSilence: PropTypes.bool,
+  sttController: PropTypes.objectOf(STTController)
 };
 
 Widget.defaultProps = {
@@ -695,7 +700,11 @@ Widget.defaultProps = {
       outline-color: green;
     }
   }`,
-  wasOpened: false
+  wasOpened: false,
+  voiceInputEnabled: false,
+  voiceInputConfig: {},
+  voiceInputStopOnSilence: false,
+  sttController: null
 };
 
 export default connect(mapStateToProps, null, null, { forwardRef: true })(Widget);

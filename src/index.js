@@ -1,4 +1,4 @@
-import React, { forwardRef, useRef } from 'react';
+import React, { forwardRef, useEffect, useRef } from 'react';
 
 import PropTypes from 'prop-types';
 import { Provider } from 'react-redux';
@@ -7,6 +7,7 @@ import Widget from './components/Widget';
 import { initStore } from '../src/store/store';
 import socket from './socket';
 import ThemeContext from '../src/components/Widget/ThemeContext';
+import STTController from './stt/STTController';
 // eslint-disable-next-line import/no-mutable-exports
 
 const ConnectedWidget = forwardRef((props, ref) => {
@@ -83,6 +84,7 @@ const ConnectedWidget = forwardRef((props, ref) => {
 
   const instanceSocket = useRef({});
   const store = useRef(null);
+  const sttController = useRef(null);
 
   if (!instanceSocket.current.url && !(store && store.current && store.current.socketRef)) {
     instanceSocket.current = new Socket(
@@ -113,6 +115,24 @@ const ConnectedWidget = forwardRef((props, ref) => {
     store.current.socketRef = instanceSocket.current.marker;
     store.current.socket = instanceSocket.current;
   }
+
+  useEffect(() => {
+    console.log('[props.voiceInputEnabled]');
+    if (!sttController.current && props.voiceInputEnabled) {
+      sttController.current = new STTController(props.voiceInputConfig.serverUrl);
+    } else if (sttController.current && !props.voiceInputEnabled) {
+      sttController.current.cleanup();
+      sttController.current = null;
+    }
+  }, [props.voiceInputEnabled]);
+
+  useEffect(() => {
+    console.log('[props.voiceInputConfig.serverUrl]');
+    if (sttController.current) {
+      sttController.current.setSttUrl(props.voiceInputConfig.serverUrl);
+    }
+  }, [props.voiceInputConfig.serverUrl]);
+
   return (
     <Provider store={store.current}>
       <ThemeContext.Provider
@@ -157,6 +177,10 @@ const ConnectedWidget = forwardRef((props, ref) => {
           defaultHighlightAnimation={props.defaultHighlightAnimation}
           defaultHighlightClassname={props.defaultHighlightClassname}
           openOnStart={props.openOnStart}
+          voiceInputEnabled={props.voiceInputEnabled}
+          voiceInputConfig={props.voiceInputConfig}
+          voiceInputStopOnSilence={props.voiceInputStopOnSilence}
+          sttController={sttController.current}
         />
       </ThemeContext.Provider>
     </Provider>
@@ -212,7 +236,10 @@ ConnectedWidget.propTypes = {
   assistTextColor: PropTypes.string,
   assistBackgoundColor: PropTypes.string,
   rectangularWidget: PropTypes.bool,
-  openOnStart: PropTypes.bool
+  openOnStart: PropTypes.bool,
+  voiceInputEnabled: PropTypes.bool,
+  voiceInputConfig: PropTypes.shape({}),
+  voiceInputStopOnSilence: PropTypes.bool
 };
 
 ConnectedWidget.defaultProps = {
@@ -260,7 +287,10 @@ ConnectedWidget.defaultProps = {
   assistTextColor: '',
   assistBackgoundColor: '',
   rectangularWidget: false,
-  openOnStart: false
+  openOnStart: false,
+  voiceInputEnabled: false,
+  voiceInputConfig: {},
+  voiceInputStopOnSilence: false
 };
 
 export default ConnectedWidget;
