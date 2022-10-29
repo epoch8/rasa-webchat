@@ -665,11 +665,7 @@ Widget.propTypes = {
   defaultHighlightClassname: PropTypes.string,
   messages: ImmutablePropTypes.listOf(ImmutablePropTypes.map),
   openOnStart: PropTypes.bool,
-  wasOpened: PropTypes.bool,
-  voiceInputEnabled: PropTypes.bool,
-  voiceInputConfig: PropTypes.shape({}),
-  voiceInputStopOnSilence: PropTypes.bool,
-  sttController: PropTypes.objectOf(STTController)
+  wasOpened: PropTypes.bool
 };
 
 Widget.defaultProps = {
@@ -700,11 +696,7 @@ Widget.defaultProps = {
       outline-color: green;
     }
   }`,
-  wasOpened: false,
-  voiceInputEnabled: false,
-  voiceInputConfig: {},
-  voiceInputStopOnSilence: false,
-  sttController: null
+  wasOpened: false
 };
 
 export default connect(mapStateToProps, null, null, { forwardRef: true })(Widget);

@@ -18,18 +18,36 @@ class AudioRecorder {
     protected audioContext: AudioContext | null;
     protected audioChunks: Array<Int16Array>;
     protected recordingLength: number;
+    protected audioChunk: Int16Array;
+    protected audioChunkCursor = 0;
     protected recorder: ScriptProcessorNode | AudioWorkletNode | null;
+    protected audioChunkSize: number
     onAudioChunk: onAudioChunkCb | null;
 
-    constructor() {
+    constructor(audioChunkSize?: number) {
         this.inited = false;
         this.audioStream = null;
         this.audioContext = null;
         this.audioChunks = [];
         this.recordingLength = 0;
+        this.audioChunk = new Int16Array(audioChunkSize || 2048);
+        this.audioChunkCursor = 0;
         this.recorder = null;
         this.onAudioChunk = null;
     }
+
+    protected onAudioChunkPart = (chunkPart: Int16Array) => {
+        this.audioChunk.set(chunkPart, this.audioChunkCursor);
+        this.audioChunkCursor += chunkPart.length;
+        if (this.audioChunkCursor >= this.audioChunk.length) {
+            if (this.onAudioChunk) {
+                this.onAudioChunk(this.audioChunk.slice());
+            }
+            this.audioChunks.push(this.audioChunk);
+            this.recordingLength += this.audioChunk.length;
+            this.audioChunkCursor = 0;
+        }
+    };
 
     async init() {
         if (this.inited) {
@@ -57,11 +75,7 @@ class AudioRecorder {
             this.recorder.onaudioprocess = (event: AudioProcessingEvent) => {
                 const samples = event.inputBuffer.getChannelData(0);
                 const PCM16ifSamples = PCM32fToPCM16i(samples);
-                this.audioChunks.push(PCM16ifSamples);
-                this.recordingLength += bufferSize;
-                if (this.onAudioChunk) {
-                    this.onAudioChunk(PCM16ifSamples);
-                }
+                this.onAudioChunkPart(PCM16ifSamples);
             };
         } else {
             await this.audioContext.audioWorklet.addModule(
@@ -76,11 +90,7 @@ class AudioRecorder {
             );
             this.recorder.port.onmessage = (ev: MessageEvent<Float32Array>) => {
                 const PCM16ifSamples = PCM32fToPCM16i(ev.data);
-                this.audioChunks.push(PCM16ifSamples);
-                this.recordingLength += PCM16ifSamples.length;
-                if (this.onAudioChunk) {
-                    this.onAudioChunk(PCM16ifSamples);
-                }
+                this.onAudioChunkPart(PCM16ifSamples);
             };
         }
         volume.connect(this.recorder);
@@ -90,6 +100,7 @@ class AudioRecorder {
     start = async () => {
         this.audioChunks = [];
         this.recordingLength = 0;
+        this.audioChunkCursor = 0;
         if (!this.inited) {
             await this.init();
         }
@@ -111,6 +122,11 @@ class AudioRecorder {
 
     getAudioData = () =>
         new Blob(this.audioChunks, { type: 'audio/raw; codecs=pcm_s16le' });
+
+    setAudioChunkSize = (chunkSize: number) => {
+        this.audioChunk = new Int16Array(chunkSize);
+        this.audioChunkCursor = 0;
+    }
 
     close = () => {
         if (this.audioContext && this.audioContext.state !== 'closed') {

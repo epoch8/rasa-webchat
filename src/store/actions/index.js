@@ -253,3 +253,57 @@ export function setCustomCss(customCss) {
   };
 }
 
+export function startVoiceInput() {
+  return {
+    type: actions.START_VOICE_INPUT
+  };
+}
+
+export function stopVoiceInput() {
+  return {
+    type: actions.STOP_VOICE_INPUT
+  };
+}
+
+export function setVoiceInputActive(active) {
+  return {
+    type: actions.SET_VOICE_INPUT_ACTIVE,
+    active
+  };
+}
+
+export function setVoiceInputEnabled(enabled) {
+  return {
+    type: actions.SET_VOICE_INPUT_ENABLED,
+    enabled
+  };
+}
+
+export function setVoiceInputAvailable(available) {
+  return {
+    type: actions.SET_VOICE_INPUT_AVAILABLE,
+    available
+  };
+}
+
+export function setPartialRecognizedText(text) {
+  return {
+    type: actions.SET_PARTIAL_RECOGNIZED_TEXT,
+    text
+  };
+}
+
+export function setRecognizedText(text) {
+  return {
+    type: actions.SET_RECOGNIZED_TEXT,
+    text
+  };
+}
+
+export function setStopOnSilence(stopOnSilence) {
+  return {
+    type: actions.SET_STOP_ON_SILENCE,
+    stopOnSilence
+  };
+}
+

@@ -146,7 +146,6 @@ class STTController {
     };
 
     getAudioData = (): Blob => {
-        // return new Blob(this.audioChunks, { type: this.mimeType });
         return this.audioRecorder.getAudioData();
     };
 
@@ -154,6 +153,10 @@ class STTController {
         this.stop();
         this.sttServerUrl = sttUrl;
         this.initSttServerConn();
+    };
+
+    setAudioChunkSize = (chunkSize: number) => {
+        this.audioRecorder.setAudioChunkSize(chunkSize);
     };
 
     cleanup = () => {

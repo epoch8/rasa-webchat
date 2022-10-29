@@ -51,13 +51,15 @@ class STTController {
             console.log('stopped');
         };
         this.getAudioData = () => {
-            // return new Blob(this.audioChunks, { type: this.mimeType });
             return this.audioRecorder.getAudioData();
         };
         this.setSttUrl = (sttUrl) => {
             this.stop();
             this.sttServerUrl = sttUrl;
             this.initSttServerConn();
+        };
+        this.setAudioChunkSize = (chunkSize) => {
+            this.audioRecorder.setAudioChunkSize(chunkSize);
         };
         this.cleanup = () => {
             this.audioRecorder.close();

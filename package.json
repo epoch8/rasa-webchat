@@ -95,10 +95,5 @@
       "\\.(css|scss)$": "<rootDir>/mocks/styleMock.js"
     },
     "setupTestFrameworkScriptFile": "<rootDir>/test-setup.js"
-  },
-  "husky": {
-    "hooks": {
-      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
-    }
   }
 }

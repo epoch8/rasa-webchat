@@ -5,6 +5,7 @@ import { Provider } from 'react-redux';
 
 import Widget from './components/Widget';
 import { initStore } from '../src/store/store';
+import * as actions from './store/actions';
 import socket from './socket';
 import ThemeContext from '../src/components/Widget/ThemeContext';
 import STTController from './stt/STTController';
@@ -84,7 +85,7 @@ const ConnectedWidget = forwardRef((props, ref) => {
 
   const instanceSocket = useRef({});
   const store = useRef(null);
-  const sttController = useRef(null);
+  const sttControllerRef = useRef(null);
 
   if (!instanceSocket.current.url && !(store && store.current && store.current.socketRef)) {
     instanceSocket.current = new Socket(
@@ -110,28 +111,61 @@ const ConnectedWidget = forwardRef((props, ref) => {
       instanceSocket.current,
       storage,
       props.docViewer,
-      props.onWidgetEvent
+      props.onWidgetEvent,
+      sttControllerRef
     );
     store.current.socketRef = instanceSocket.current.marker;
     store.current.socket = instanceSocket.current;
   }
 
+  useEffect(() => () => {
+    console.log(console.log('before unmount'));
+    if (sttControllerRef.current) {
+      sttControllerRef.current.cleanup();
+      sttControllerRef.current = null;
+    }
+  }, []);
+
   useEffect(() => {
     console.log('[props.voiceInputEnabled]');
-    if (!sttController.current && props.voiceInputEnabled) {
-      sttController.current = new STTController(props.voiceInputConfig.serverUrl);
-    } else if (sttController.current && !props.voiceInputEnabled) {
-      sttController.current.cleanup();
-      sttController.current = null;
+    if (!sttControllerRef.current && props.voiceInputEnabled) {
+      sttControllerRef.current = new STTController(props.voiceInputConfig.serverUrl);
+      sttControllerRef.current.onRecognitionData = (text, final) => {
+        if (final) {
+          store.dispatch(actions.setRecognizedText(text));
+        } else {
+          store.dispatch(actions.setPartialRecognizedText(text));
+        }
+      };
+      sttControllerRef.current.onSttAvailableChange = (available) => {
+        store.dispatch(actions.setVoiceInputAvailable(available));
+      };
+      sttControllerRef.current.onActiveChange = (active) => {
+        store.dispatch(actions.setVoiceInputActive(active));
+      };
+    } else if (sttControllerRef.current && !props.voiceInputEnabled) {
+      sttControllerRef.current.cleanup();
+      sttControllerRef.current = null;
     }
   }, [props.voiceInputEnabled]);
 
   useEffect(() => {
-    console.log('[props.voiceInputConfig.serverUrl]');
-    if (sttController.current) {
-      sttController.current.setSttUrl(props.voiceInputConfig.serverUrl);
+    console.log('[props.voiceInputConfig.serverUrl, sttControllerRef.current]');
+    if (sttControllerRef.current) {
+      sttControllerRef.current.setSttUrl(props.voiceInputConfig.serverUrl);
     }
-  }, [props.voiceInputConfig.serverUrl]);
+  }, [props.voiceInputConfig.serverUrl, sttControllerRef.current]);
+
+  useEffect(() => {
+    console.log('[props.voiceInputConfig.audioChunkSize, sttControllerRef.current]');
+    if (sttControllerRef.current && props.voiceInputConfig.audioChunkSize) {
+      sttControllerRef.current.setAudioChunkSize(props.voiceInputConfig.audioChunkSize);
+    }
+  }, [props.voiceInputConfig.audioChunkSize, sttControllerRef.current]);
+
+  useEffect(() => {
+    store.dispatch(actions.setStopOnSilence(props.voiceInputStopOnSilence));
+  }, [props.voiceInputStopOnSilence]);
 
   return (
     <Provider store={store.current}>
@@ -177,10 +211,6 @@ const ConnectedWidget = forwardRef((props, ref) => {
           defaultHighlightAnimation={props.defaultHighlightAnimation}
           defaultHighlightClassname={props.defaultHighlightClassname}
           openOnStart={props.openOnStart}
-          voiceInputEnabled={props.voiceInputEnabled}
-          voiceInputConfig={props.voiceInputConfig}
-          voiceInputStopOnSilence={props.voiceInputStopOnSilence}
-          sttController={sttController.current}
         />
       </ThemeContext.Provider>
     </Provider>
@@ -238,7 +268,10 @@ ConnectedWidget.propTypes = {
   rectangularWidget: PropTypes.bool,
   openOnStart: PropTypes.bool,
   voiceInputEnabled: PropTypes.bool,
-  voiceInputConfig: PropTypes.shape({}),
+  voiceInputConfig: PropTypes.shape({
+    serverUrl: PropTypes.string,
+    audioChunkSize: PropTypes.number
+  }),
   voiceInputStopOnSilence: PropTypes.bool
 };
 
