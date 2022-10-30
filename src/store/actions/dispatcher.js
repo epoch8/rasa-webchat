@@ -110,3 +110,11 @@ export function send(playload, text = '', customStore) {
   store.dispatch(actions.emitUserMessage(playload));
   if (text !== '') store.dispatch(actions.addUserMessage(text));
 }
+
+export function startVoiceInput() {
+  store.dispatch(actions.startVoiceInput());
+}
+
+export function stopVoiceInput() {
+  store.dispatch(actions.stopVoiceInput());
+}

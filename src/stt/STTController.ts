@@ -134,12 +134,16 @@ class STTController {
         console.log('started');
     };
 
-    stop = () => {
+    stop = (getFinalResult: boolean = true) => {
         console.log('stop()');
         if (!this.active || !this.sttAvailable) {
             return;
         }
-        this.ws.send('{"eof" : 1}');
+        if (getFinalResult) {
+            this.ws.send('{"eof" : 1}');
+        } else {
+            this.audioRecorder.onAudioChunk = null;
+        }
         this.stopRecording();
         this.setActive(false);
         console.log('stopped');
@@ -150,7 +154,7 @@ class STTController {
     };
 
     setSttUrl = (sttUrl: string) => {
-        this.stop();
+        this.stop(false);
         this.sttServerUrl = sttUrl;
         this.initSttServerConn();
     };

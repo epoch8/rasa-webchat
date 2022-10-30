@@ -6,6 +6,8 @@
   "plugins": [
     "transform-class-properties",
     "@babel/plugin-proposal-object-rest-spread",
+    "@babel/plugin-transform-modules-commonjs",
+    "@babel/plugin-transform-runtime",
     ["module-resolver", {
       "root": ["./src"],
       "alias": {

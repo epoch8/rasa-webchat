@@ -40,12 +40,17 @@ class STTController {
             yield this.audioRecorder.start();
             console.log('started');
         });
-        this.stop = () => {
+        this.stop = (getFinalResult = true) => {
             console.log('stop()');
             if (!this.active || !this.sttAvailable) {
                 return;
             }
-            this.ws.send('{"eof" : 1}');
+            if (getFinalResult) {
+                this.ws.send('{"eof" : 1}');
+            }
+            else {
+                this.audioRecorder.onAudioChunk = null;
+            }
             this.stopRecording();
             this.setActive(false);
             console.log('stopped');
@@ -54,7 +59,7 @@ class STTController {
             return this.audioRecorder.getAudioData();
         };
         this.setSttUrl = (sttUrl) => {
-            this.stop();
+            this.stop(false);
             this.sttServerUrl = sttUrl;
             this.initSttServerConn();
         };

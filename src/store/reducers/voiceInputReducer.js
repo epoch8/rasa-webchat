@@ -1,3 +1,4 @@
+import { Map } from 'immutable';
 import * as actionTypes from '../actions/actionTypes';
 
 export default function (sttControllerRef) {
@@ -19,14 +20,12 @@ export default function (sttControllerRef) {
           !state.get('active')
         ) {
           sttControllerRef.current.start();
-          return state.set('active', true); // ?
         }
         return state;
       }
       case actionTypes.STOP_VOICE_INPUT: {
         if (sttControllerRef.current && state.get('active')) {
           sttControllerRef.current.stop();
-          return state.set('active', false); // ?
         }
         return state;
       }
@@ -37,13 +36,6 @@ export default function (sttControllerRef) {
         return state.set('partialRecognizedText', action.text);
       }
       case actionTypes.SET_RECOGNIZED_TEXT: {
-        if (
-          state.get('stopOnSilence') &&
-          sttControllerRef.current &&
-          sttControllerRef.current.isActive()
-        ) {
-          sttControllerRef.current.stop();
-        }
         return state.set('recognizedText', action.text);
       }
       case actionTypes.SET_VOICE_INPUT_AVAILABLE: {

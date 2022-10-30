@@ -166,7 +166,13 @@ export const rasaWebchatProTypes = {
   assistTextColor: PropTypes.string,
   assistBackgoundColor: PropTypes.string,
   rectangularWidget: PropTypes.bool,
-  openOnStart: PropTypes.bool
+  openOnStart: PropTypes.bool,
+  voiceInputEnabled: PropTypes.bool,
+  voiceInputConfig: PropTypes.shape({
+    serverUrl: PropTypes.string,
+    audioChunkSize: PropTypes.number
+  }),
+  voiceInputStopOnSilence: PropTypes.bool
 };
 
 RasaWebchatProWithRules.propTypes = {
@@ -215,7 +221,13 @@ export const rasaWebchatProDefaultTypes = {
   assistTextColor: '',
   assistBackgoundColor: '',
   rectangularWidget: false,
-  openOnStart: false
+  openOnStart: false,
+  voiceInputEnabled: false,
+  voiceInputConfig: {
+    serverUrl: 'ws://localhost:2700',
+    audioChunkSize: 2048,
+  },
+  voiceInputStopOnSilence: false
 };
 
 export default React.forwardRef((props, ref) => (

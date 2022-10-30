@@ -13,14 +13,7 @@ import STTController from './stt/STTController';
 
 const ConnectedWidget = forwardRef((props, ref) => {
   class Socket {
-    constructor(
-      url,
-      customData,
-      path,
-      protocol,
-      protocolOptions,
-      onSocketEvent
-    ) {
+    constructor(url, customData, path, protocol, protocolOptions, onSocketEvent) {
       this.url = url;
       this.customData = customData;
       this.path = path;
@@ -66,18 +59,17 @@ const ConnectedWidget = forwardRef((props, ref) => {
       );
       // We set a function on session_confirm here so as to avoid any race condition
       // this will be called first and will set those parameters for everyone to use.
-      this.socket.on('session_confirm', (sessionObject) => {
+      this.socket.on('session_confirm', sessionObject => {
         this.sessionConfirmed = true;
-        this.sessionId = (sessionObject && sessionObject.session_id)
-          ? sessionObject.session_id
-          : sessionObject;
+        this.sessionId =
+          sessionObject && sessionObject.session_id ? sessionObject.session_id : sessionObject;
       });
-      this.onEvents.forEach((event) => {
+      this.onEvents.forEach(event => {
         this.socket.on(event.event, event.callback);
       });
 
       this.onEvents = [];
-      Object.keys(this.onSocketEvent).forEach((event) => {
+      Object.keys(this.onSocketEvent).forEach(event => {
         this.socket.on(event, this.onSocketEvent[event]);
       });
     }
@@ -102,8 +94,7 @@ const ConnectedWidget = forwardRef((props, ref) => {
     instanceSocket.current = store.socket;
   }
 
-  const storage =
-    props.params.storage === 'session' ? sessionStorage : localStorage;
+  const storage = props.params.storage === 'session' ? sessionStorage : localStorage;
 
   if (!store || !store.current) {
     store.current = initStore(
@@ -118,35 +109,32 @@ const ConnectedWidget = forwardRef((props, ref) => {
     store.current.socket = instanceSocket.current;
   }
 
-  useEffect(() => () => {
-    console.log(console.log('before unmount'));
-    if (sttControllerRef.current) {
-      sttControllerRef.current.cleanup();
-      sttControllerRef.current = null;
-    }
-  }, []);
+  useEffect(
+    () => () => {
+      console.log(console.log('before unmount'));
+      if (sttControllerRef.current) {
+        sttControllerRef.current.cleanup();
+        sttControllerRef.current = null;
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     console.log('[props.voiceInputEnabled]');
     if (!sttControllerRef.current && props.voiceInputEnabled) {
       sttControllerRef.current = new STTController(props.voiceInputConfig.serverUrl);
-      sttControllerRef.current.onRecognitionData = (text, final) => {
-        if (final) {
-          store.dispatch(actions.setRecognizedText(text));
-        } else {
-          store.dispatch(actions.setPartialRecognizedText(text));
-        }
+      sttControllerRef.current.onSttAvailableChange = available => {
+        store.current.dispatch(actions.setVoiceInputAvailable(available));
       };
-      sttControllerRef.current.onSttAvailableChange = (available) => {
-        store.dispatch(actions.setVoiceInputAvailable(available));
-      };
-      sttControllerRef.current.onActiveChange = (active) => {
-        store.dispatch(actions.setVoiceInputActive(active));
+      sttControllerRef.current.onActiveChange = active => {
+        store.current.dispatch(actions.setVoiceInputActive(active));
       };
     } else if (sttControllerRef.current && !props.voiceInputEnabled) {
       sttControllerRef.current.cleanup();
       sttControllerRef.current = null;
     }
+    store.current.dispatch(actions.setVoiceInputEnabled(props.voiceInputEnabled));
   }, [props.voiceInputEnabled]);
 
   useEffect(() => {
@@ -164,19 +152,34 @@ const ConnectedWidget = forwardRef((props, ref) => {
   }, [props.voiceInputConfig.audioChunkSize, sttControllerRef.current]);
 
   useEffect(() => {
-    store.dispatch(actions.setStopOnSilence(props.voiceInputStopOnSilence));
-  }, [props.voiceInputStopOnSilence]);
+    if (!sttControllerRef.current) {
+      return;
+    }
+    sttControllerRef.current.onRecognitionData = (text, final) => {
+      if (final) {
+        store.current.dispatch(actions.setRecognizedText(text));
+      } else {
+        if (props.voiceInputStopOnSilence) {
+          sttControllerRef.current.stop(false);
+        }
+        store.current.dispatch(actions.setPartialRecognizedText(text));
+      }
+    };
+    store.current.dispatch(actions.setStopOnSilence(props.voiceInputStopOnSilence));
+  }, [props.voiceInputStopOnSilence, sttControllerRef.current]);
 
   return (
     <Provider store={store.current}>
       <ThemeContext.Provider
-        value={{ mainColor: props.mainColor,
+        value={{
+          mainColor: props.mainColor,
           conversationBackgroundColor: props.conversationBackgroundColor,
           userTextColor: props.userTextColor,
           userBackgroundColor: props.userBackgroundColor,
           assistTextColor: props.assistTextColor,
           assistBackgoundColor: props.assistBackgoundColor,
-          rectangularWidget: props.rectangularWidget }}
+          rectangularWidget: props.rectangularWidget,
+        }}
       >
         <Widget
           ref={ref}
@@ -254,7 +257,7 @@ ConnectedWidget.propTypes = {
     onChatOpen: PropTypes.func,
     onChatClose: PropTypes.func,
     onChatVisible: PropTypes.func,
-    onChatHidden: PropTypes.func
+    onChatHidden: PropTypes.func,
   }),
   disableTooltips: PropTypes.bool,
   defaultHighlightCss: PropTypes.string,
@@ -270,9 +273,9 @@ ConnectedWidget.propTypes = {
   voiceInputEnabled: PropTypes.bool,
   voiceInputConfig: PropTypes.shape({
     serverUrl: PropTypes.string,
-    audioChunkSize: PropTypes.number
+    audioChunkSize: PropTypes.number,
   }),
-  voiceInputStopOnSilence: PropTypes.bool
+  voiceInputStopOnSilence: PropTypes.bool,
 };
 
 ConnectedWidget.defaultProps = {
@@ -291,14 +294,14 @@ ConnectedWidget.defaultProps = {
   badge: 0,
   embedded: false,
   params: {
-    storage: 'local'
+    storage: 'local',
   },
   docViewer: false,
   showCloseButton: true,
   showFullScreenButton: false,
   displayUnreadCount: false,
   showMessageDate: false,
-  customMessageDelay: (message) => {
+  customMessageDelay: message => {
     let delay = message.length * 30;
     if (delay > 3 * 1000) delay = 3 * 1000;
     if (delay < 800) delay = 800;
@@ -310,7 +313,7 @@ ConnectedWidget.defaultProps = {
     onChatOpen: () => {},
     onChatClose: () => {},
     onChatVisible: () => {},
-    onChatHidden: () => {}
+    onChatHidden: () => {},
   },
   disableTooltips: false,
   mainColor: '',
@@ -322,8 +325,11 @@ ConnectedWidget.defaultProps = {
   rectangularWidget: false,
   openOnStart: false,
   voiceInputEnabled: false,
-  voiceInputConfig: {},
-  voiceInputStopOnSilence: false
+  voiceInputConfig: {
+    serverUrl: 'ws://localhost:2700',
+    audioChunkSize: 2048,
+  },
+  voiceInputStopOnSilence: false,
 };
 
 export default ConnectedWidget;
