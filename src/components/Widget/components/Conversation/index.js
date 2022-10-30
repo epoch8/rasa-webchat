@@ -36,6 +36,8 @@ const Conversation = (props) => {
         sendMessage={props.sendMessage}
         disabledInput={props.disabledInput}
         inputTextFieldHint={props.inputTextFieldHint}
+        startVoiceInput={props.startVoiceInput}
+        stopVoiceInput={props.stopVoiceInput}
       />
     </div>);
 };
@@ -52,12 +54,14 @@ Conversation.propTypes = {
   showFullScreenButton: PropTypes.bool,
   disabledInput: PropTypes.bool,
   inputTextFieldHint: PropTypes.string,
-  params: PropTypes.object,
+  params: PropTypes.shape({}),
   connected: PropTypes.bool,
   connectingText: PropTypes.string,
   closeImage: PropTypes.string,
   customComponent: PropTypes.func,
-  showMessageDate: PropTypes.oneOfType([PropTypes.bool, PropTypes.func])
+  showMessageDate: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
+  startVoiceInput: PropTypes.func,
+  stopVoiceInput: PropTypes.func
 };
 
 export default Conversation;

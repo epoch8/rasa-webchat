@@ -42,6 +42,8 @@ const WidgetLayout = (props) => {
           customComponent={props.customComponent}
           showMessageDate={props.showMessageDate}
           inputTextFieldHint={props.inputTextFieldHint}
+          startVoiceInput={props.startVoiceInput}
+          stopVoiceInput={props.stopVoiceInput}
         />
       )}
       {!props.embedded && (
@@ -85,7 +87,7 @@ WidgetLayout.propTypes = {
   badge: PropTypes.number,
   embedded: PropTypes.bool,
   inputTextFieldHint: PropTypes.string,
-  params: PropTypes.object,
+  params: PropTypes.shape({}),
   connected: PropTypes.bool,
   connectingText: PropTypes.string,
   openLauncherImage: PropTypes.string,
@@ -93,7 +95,9 @@ WidgetLayout.propTypes = {
   customComponent: PropTypes.func,
   displayUnreadCount: PropTypes.bool,
   showMessageDate: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
-  tooltipPayload: PropTypes.string
+  tooltipPayload: PropTypes.string,
+  startVoiceInput: PropTypes.func,
+  stopVoiceInput: PropTypes.func
 };
 
 export default connect(mapStateToProps)(WidgetLayout);

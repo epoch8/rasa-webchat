@@ -59,17 +59,17 @@ const ConnectedWidget = forwardRef((props, ref) => {
       );
       // We set a function on session_confirm here so as to avoid any race condition
       // this will be called first and will set those parameters for everyone to use.
-      this.socket.on('session_confirm', sessionObject => {
+      this.socket.on('session_confirm', (sessionObject) => {
         this.sessionConfirmed = true;
         this.sessionId =
           sessionObject && sessionObject.session_id ? sessionObject.session_id : sessionObject;
       });
-      this.onEvents.forEach(event => {
+      this.onEvents.forEach((event) => {
         this.socket.on(event.event, event.callback);
       });
 
       this.onEvents = [];
-      Object.keys(this.onSocketEvent).forEach(event => {
+      Object.keys(this.onSocketEvent).forEach((event) => {
         this.socket.on(event, this.onSocketEvent[event]);
       });
     }
@@ -124,10 +124,10 @@ const ConnectedWidget = forwardRef((props, ref) => {
     console.log('[props.voiceInputEnabled]');
     if (!sttControllerRef.current && props.voiceInputEnabled) {
       sttControllerRef.current = new STTController(props.voiceInputConfig.serverUrl);
-      sttControllerRef.current.onSttAvailableChange = available => {
+      sttControllerRef.current.onSttAvailableChange = (available) => {
         store.current.dispatch(actions.setVoiceInputAvailable(available));
       };
-      sttControllerRef.current.onActiveChange = active => {
+      sttControllerRef.current.onActiveChange = (active) => {
         store.current.dispatch(actions.setVoiceInputActive(active));
       };
     } else if (sttControllerRef.current && !props.voiceInputEnabled) {
@@ -158,15 +158,35 @@ const ConnectedWidget = forwardRef((props, ref) => {
     sttControllerRef.current.onRecognitionData = (text, final) => {
       if (final) {
         store.current.dispatch(actions.setRecognizedText(text));
-      } else {
+        store.current.dispatch(actions.setPartialRecognizedText(''));
         if (props.voiceInputStopOnSilence) {
           sttControllerRef.current.stop(false);
         }
+      } else {
         store.current.dispatch(actions.setPartialRecognizedText(text));
       }
     };
     store.current.dispatch(actions.setStopOnSilence(props.voiceInputStopOnSilence));
   }, [props.voiceInputStopOnSilence, sttControllerRef.current]);
+
+  const startVoiceInput = () => {
+    if (
+      sttControllerRef.current &&
+      sttControllerRef.current.isSttAvalable() &&
+      !sttControllerRef.current.isActive()
+    ) {
+      sttControllerRef.current.start();
+    }
+  };
+
+  const stopVoiceInput = () => {
+    if (
+      sttControllerRef.current &&
+      sttControllerRef.current.isActive()
+    ) {
+      sttControllerRef.current.stop();
+    }
+  };
 
   return (
     <Provider store={store.current}>
@@ -178,7 +198,7 @@ const ConnectedWidget = forwardRef((props, ref) => {
           userBackgroundColor: props.userBackgroundColor,
           assistTextColor: props.assistTextColor,
           assistBackgoundColor: props.assistBackgoundColor,
-          rectangularWidget: props.rectangularWidget,
+          rectangularWidget: props.rectangularWidget
         }}
       >
         <Widget
@@ -214,6 +234,8 @@ const ConnectedWidget = forwardRef((props, ref) => {
           defaultHighlightAnimation={props.defaultHighlightAnimation}
           defaultHighlightClassname={props.defaultHighlightClassname}
           openOnStart={props.openOnStart}
+          startVoiceInput={startVoiceInput}
+          stopVoiceInput={stopVoiceInput}
         />
       </ThemeContext.Provider>
     </Provider>
@@ -257,7 +279,7 @@ ConnectedWidget.propTypes = {
     onChatOpen: PropTypes.func,
     onChatClose: PropTypes.func,
     onChatVisible: PropTypes.func,
-    onChatHidden: PropTypes.func,
+    onChatHidden: PropTypes.func
   }),
   disableTooltips: PropTypes.bool,
   defaultHighlightCss: PropTypes.string,
@@ -273,9 +295,9 @@ ConnectedWidget.propTypes = {
   voiceInputEnabled: PropTypes.bool,
   voiceInputConfig: PropTypes.shape({
     serverUrl: PropTypes.string,
-    audioChunkSize: PropTypes.number,
+    audioChunkSize: PropTypes.number
   }),
-  voiceInputStopOnSilence: PropTypes.bool,
+  voiceInputStopOnSilence: PropTypes.bool
 };
 
 ConnectedWidget.defaultProps = {
@@ -294,14 +316,14 @@ ConnectedWidget.defaultProps = {
   badge: 0,
   embedded: false,
   params: {
-    storage: 'local',
+    storage: 'local'
   },
   docViewer: false,
   showCloseButton: true,
   showFullScreenButton: false,
   displayUnreadCount: false,
   showMessageDate: false,
-  customMessageDelay: message => {
+  customMessageDelay: (message) => {
     let delay = message.length * 30;
     if (delay > 3 * 1000) delay = 3 * 1000;
     if (delay < 800) delay = 800;
@@ -313,7 +335,7 @@ ConnectedWidget.defaultProps = {
     onChatOpen: () => {},
     onChatClose: () => {},
     onChatVisible: () => {},
-    onChatHidden: () => {},
+    onChatHidden: () => {}
   },
   disableTooltips: false,
   mainColor: '',
@@ -327,9 +349,9 @@ ConnectedWidget.defaultProps = {
   voiceInputEnabled: false,
   voiceInputConfig: {
     serverUrl: 'ws://localhost:2700',
-    audioChunkSize: 2048,
+    audioChunkSize: 2048
   },
-  voiceInputStopOnSilence: false,
+  voiceInputStopOnSilence: false
 };
 
 export default ConnectedWidget;

@@ -14,8 +14,8 @@ function voiceInputButton({ active, available }) {
 
   const stopSvg = (
     <g>
-      <path d="M0 0h24v24H0V0z" fill="none" />
-      <path d="M16 8v8H8V8h8m2-2H6v12h12V6z" />
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path d="M6 6h12v12H6z" />
     </g>
   );
 
@@ -27,7 +27,7 @@ function voiceInputButton({ active, available }) {
       viewBox="0 0 24 24"
       width="24px"
       style={{ fill: mainColor }}
-      className={available ? "rw-voice-input-icon" : "rw-voice-input-icon-disabled"}
+      className={available ? 'rw-voice-input-icon' : 'rw-voice-input-icon-disabled'}
     >
       {active ? stopSvg : micSvg}
     </svg>

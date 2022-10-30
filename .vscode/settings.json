@@ -9,5 +9,6 @@
     "eslint.enable": true,
     "editor.codeActionsOnSave": {
         "source.fixAll.eslint": true
-    }
+    },
+    "svg.preview.background": "custom"
 }

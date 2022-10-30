@@ -1,11 +1,9 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import TextareaAutosize from 'react-textarea-autosize';
 import Send from 'assets/send_button';
 import Mic from 'assets/mic_button';
-import '../../../../../../';
-import { stopVoiceInput, startVoiceInput } from '../../../../../../store/actions';
 import './style.scss';
 
 const Sender = ({
@@ -18,18 +16,37 @@ const Sender = ({
   voiceInputActive,
   voiceInputRecognizedText,
   voiceInputPartialRecognizedText,
-  dispatch,
+  startVoiceInput,
+  stopVoiceInput
 }) => {
+  const [keyboardInputValue, setKeyboardInputValue] = useState('');
   const [inputValue, setInputValue] = useState('');
   const formRef = useRef('');
   function handleChange(e) {
+    setKeyboardInputValue(e.target.value);
     setInputValue(e.target.value);
   }
 
   function handleSubmit(e) {
     sendMessage(e);
     setInputValue('');
+    setKeyboardInputValue('');
   }
+
+  useEffect(() => {
+    if (voiceInputPartialRecognizedText) {
+      setInputValue(`${keyboardInputValue} ${voiceInputPartialRecognizedText}`);
+    }
+  }, [voiceInputPartialRecognizedText]);
+
+  useEffect(() => {
+    if (voiceInputRecognizedText) {
+      const finalInput = `${keyboardInputValue} ${voiceInputRecognizedText}`;
+      setInputValue(finalInput);
+      setKeyboardInputValue(finalInput);
+    }
+  }, [voiceInputRecognizedText]);
+
 
   function onEnterPress(e) {
     if (e.keyCode === 13 && e.shiftKey === false) {
@@ -40,28 +57,27 @@ const Sender = ({
     }
   }
 
-  const renderVoiceInputButton = () => {
-    return (
-      <button
-        className="rw-voice-input"
-        disabled={!voiceInputAvailable}
-        onClick={handleVoiceInputButtonClick}
-      >
-        <Mic active={voiceInputActive} available={voiceInputAvailable} alt="voiceInput" />
-      </button>
-    );
-  };
-
-  const handleVoiceInputButtonClick = e => {
+  const handleVoiceInputButtonClick = () => {
     if (!voiceInputEnabled || !voiceInputAvailable) {
       return;
     }
     if (voiceInputActive) {
-      dispatch(stopVoiceInput());
+      stopVoiceInput();
     } else {
-      dispatch(startVoiceInput());
+      startVoiceInput();
     }
   };
+
+  const renderVoiceInputButton = () => (
+    <button
+      type="button"
+      className="rw-voice-input"
+      disabled={!voiceInputAvailable}
+      onClick={handleVoiceInputButtonClick}
+    >
+      <Mic active={voiceInputActive} available={voiceInputAvailable} alt="voiceInput" />
+    </button>
+  );
 
   return userInput === 'hide' ? (
     <div />
@@ -80,6 +96,7 @@ const Sender = ({
         disabled={disabledInput || userInput === 'disable'}
         autoFocus
         autoComplete="off"
+        value={inputValue}
         readOnly={voiceInputActive}
       />
       <button type="submit" className="rw-send" disabled={!(inputValue && inputValue.length > 0)}>
@@ -94,7 +111,7 @@ const mapStateToProps = state => ({
   voiceInputAvailable: state.voiceInput.get('available'),
   voiceInputActive: state.voiceInput.get('active'),
   voiceInputRecognizedText: state.voiceInput.get('recognizedText'),
-  voiceInputPartialRecognizedText: state.voiceInput.get('partialRecognizedText'),
+  voiceInputPartialRecognizedText: state.voiceInput.get('partialRecognizedText')
 });
 
 Sender.propTypes = {
@@ -107,6 +124,8 @@ Sender.propTypes = {
   voiceInputActive: PropTypes.bool,
   voiceInputRecognizedText: PropTypes.string,
   voiceInputPartialRecognizedText: PropTypes.string,
+  startVoiceInput: PropTypes.func,
+  stopVoiceInput: PropTypes.func
 };
 
 export default connect(mapStateToProps)(Sender);

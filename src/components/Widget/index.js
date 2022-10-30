@@ -38,7 +38,6 @@ import { SESSION_NAME, NEXT_MESSAGE } from 'constants';
 import { isVideo, isImage, isButtons, isText, isCarousel } from './msgProcessor';
 import WidgetLayout from './layout';
 import { storeLocalSession, getLocalSession } from '../../store/reducers/helper';
-import STTController from '../../stt/STTController';
 
 class Widget extends Component {
   constructor(props) {
@@ -608,6 +607,8 @@ class Widget extends Component {
         displayUnreadCount={this.props.displayUnreadCount}
         showMessageDate={this.props.showMessageDate}
         tooltipPayload={this.props.tooltipPayload}
+        startVoiceInput={this.props.startVoiceInput}
+        stopVoiceInput={this.props.stopVoiceInput}
       />
     );
   }
@@ -665,7 +666,9 @@ Widget.propTypes = {
   defaultHighlightClassname: PropTypes.string,
   messages: ImmutablePropTypes.listOf(ImmutablePropTypes.map),
   openOnStart: PropTypes.bool,
-  wasOpened: PropTypes.bool
+  wasOpened: PropTypes.bool,
+  startVoiceInput: PropTypes.func,
+  stopVoiceInput: PropTypes.func
 };
 
 Widget.defaultProps = {
@@ -696,7 +699,9 @@ Widget.defaultProps = {
       outline-color: green;
     }
   }`,
-  wasOpened: false
+  wasOpened: false,
+  startVoiceInput: () => {},
+  stopVoiceInput: () => {}
 };
 
 export default connect(mapStateToProps, null, null, { forwardRef: true })(Widget);
