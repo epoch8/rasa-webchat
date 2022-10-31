@@ -16,6 +16,10 @@ class STTController {
     protected ws: WebSocket | null;
     protected sttAvailable: boolean;
     protected reconnectTimeoutId: NodeJS.Timeout | null;
+    protected silenceStartTs: number
+    protected recognizedText: string
+    stopOnSilence: boolean
+    stopOnSilenceDuration: number
     onRecognitionData: recognitionDataCb | null;
     onSttAvailableChange: sttAvailableChangeCb | null;
     onActiveChange: activeChangeCb | null;
@@ -27,6 +31,10 @@ class STTController {
         this.ws = null;
         this.sttAvailable = false;
         this.reconnectTimeoutId = null;
+        this.silenceStartTs = 0;
+        this.recognizedText = '';
+        this.stopOnSilence = false;
+        this.stopOnSilenceDuration = 2000;
         this.onRecognitionData = null;
         this.onSttAvailableChange = null;
         this.onActiveChange = null;
@@ -41,14 +49,27 @@ class STTController {
         };
         this.ws.onmessage = (ev: MessageEvent) => {
             console.log('Response:', ev.data);
-            if (!this.onRecognitionData) {
-                return;
-            }
+            let recognizedText: string, final: boolean;
             const response: recognitionResponse = JSON.parse(ev.data);
             if (response.hasOwnProperty('partial')) {
-                this.onRecognitionData(response.partial, false);
+                recognizedText = response.partial;
+                final = false;
             } else if (response.hasOwnProperty('text')) {
-                this.onRecognitionData(response.text, true);
+                recognizedText = response.text;;
+                final = true;
+            }
+
+            if (!this.silenceStartTs || (recognizedText !== this.recognizedText)) {
+                this.silenceStartTs = Date.now();
+                this.recognizedText = recognizedText;
+            } else if (Date.now() - this.silenceStartTs > this.stopOnSilenceDuration) {
+                this.silenceStartTs = 0;
+                this.recognizedText = '';
+                this.stop();
+            }
+
+            if (this.onRecognitionData) {
+                this.onRecognitionData(recognizedText, final);
             }
         };
         this.ws.onclose = (ev: CloseEvent) => {
@@ -115,6 +136,8 @@ class STTController {
             return;
         }
         this.setActive(true);
+        this.silenceStartTs = 0;
+        this.recognizedText = '';
         if (!this.audioRecorder.isInited()) {
             await this.audioRecorder.init();
         }

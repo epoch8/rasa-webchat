@@ -130,6 +130,14 @@ const ConnectedWidget = forwardRef((props, ref) => {
       sttControllerRef.current.onActiveChange = (active) => {
         store.current.dispatch(actions.setVoiceInputActive(active));
       };
+      sttControllerRef.current.onRecognitionData = (text, final) => {
+        if (final) {
+          store.current.dispatch(actions.setRecognizedText(text));
+          store.current.dispatch(actions.setPartialRecognizedText(''));
+        } else {
+          store.current.dispatch(actions.setPartialRecognizedText(text));
+        }
+      };
     } else if (sttControllerRef.current && !props.voiceInputEnabled) {
       sttControllerRef.current.cleanup();
       sttControllerRef.current = null;
@@ -152,20 +160,15 @@ const ConnectedWidget = forwardRef((props, ref) => {
   }, [props.voiceInputConfig.audioChunkSize, sttControllerRef.current]);
 
   useEffect(() => {
-    if (!sttControllerRef.current) {
-      return;
+    if (sttControllerRef.current) {
+      sttControllerRef.current.stopOnSilenceDuration = props.voiceInputConfig.stopOnSilenceDuration;
     }
-    sttControllerRef.current.onRecognitionData = (text, final) => {
-      if (final) {
-        store.current.dispatch(actions.setRecognizedText(text));
-        store.current.dispatch(actions.setPartialRecognizedText(''));
-        if (props.voiceInputStopOnSilence) {
-          sttControllerRef.current.stop(false);
-        }
-      } else {
-        store.current.dispatch(actions.setPartialRecognizedText(text));
-      }
-    };
+  }, [props.voiceInputConfig.stopOnSilenceDuration, sttControllerRef.current]);
+
+  useEffect(() => {
+    if (sttControllerRef.current) {
+      sttControllerRef.current.voiceInputStopOnSilence = props.voiceInputStopOnSilence;
+    }
     store.current.dispatch(actions.setStopOnSilence(props.voiceInputStopOnSilence));
   }, [props.voiceInputStopOnSilence, sttControllerRef.current]);
 
@@ -179,12 +182,9 @@ const ConnectedWidget = forwardRef((props, ref) => {
     }
   };
 
-  const stopVoiceInput = () => {
-    if (
-      sttControllerRef.current &&
-      sttControllerRef.current.isActive()
-    ) {
-      sttControllerRef.current.stop();
+  const stopVoiceInput = (waitForResult) => {
+    if (sttControllerRef.current && sttControllerRef.current.isActive()) {
+      sttControllerRef.current.stop(!!waitForResult);
     }
   };
 
@@ -295,7 +295,8 @@ ConnectedWidget.propTypes = {
   voiceInputEnabled: PropTypes.bool,
   voiceInputConfig: PropTypes.shape({
     serverUrl: PropTypes.string,
-    audioChunkSize: PropTypes.number
+    audioChunkSize: PropTypes.number,
+    stopOnSilenceDuration: PropTypes.number
   }),
   voiceInputStopOnSilence: PropTypes.bool
 };
@@ -349,7 +350,8 @@ ConnectedWidget.defaultProps = {
   voiceInputEnabled: false,
   voiceInputConfig: {
     serverUrl: 'ws://localhost:2700',
-    audioChunkSize: 2048
+    audioChunkSize: 2048,
+    stopOnSilenceDuration: 2000
   },
   voiceInputStopOnSilence: false
 };

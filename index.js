@@ -170,7 +170,8 @@ export const rasaWebchatProTypes = {
   voiceInputEnabled: PropTypes.bool,
   voiceInputConfig: PropTypes.shape({
     serverUrl: PropTypes.string,
-    audioChunkSize: PropTypes.number
+    audioChunkSize: PropTypes.number,
+    stopOnSilenceDuration: PropTypes.number
   }),
   voiceInputStopOnSilence: PropTypes.bool
 };
@@ -226,6 +227,7 @@ export const rasaWebchatProDefaultTypes = {
   voiceInputConfig: {
     serverUrl: 'ws://localhost:2700',
     audioChunkSize: 2048,
+    stopOnSilenceDuration: 2000
   },
   voiceInputStopOnSilence: false
 };

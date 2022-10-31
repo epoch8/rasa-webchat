@@ -26,7 +26,7 @@ function voiceInputButton({ active, available }) {
       height="24px"
       viewBox="0 0 24 24"
       width="24px"
-      style={{ fill: mainColor }}
+      style={{ fill: available ? mainColor : null }}
       className={available ? 'rw-voice-input-icon' : 'rw-voice-input-icon-disabled'}
     >
       {active ? stopSvg : micSvg}
@@ -36,7 +36,7 @@ function voiceInputButton({ active, available }) {
 
 voiceInputButton.propTypes = {
   active: PropTypes.bool,
-  available: PropTypes.bool,
+  available: PropTypes.bool
 };
 
 export default voiceInputButton;
