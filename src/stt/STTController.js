@@ -49,10 +49,10 @@ class STTController {
             }
             this.stopRecording();
             if (immediatly) {
-                this.ws.send('{"eof" : 1}');
+                this.ws.close();
             }
             else {
-                this.ws.close();
+                this.ws.send('{"eof" : 1}');
             }
             this.setActive(false);
             console.log('stopped');
