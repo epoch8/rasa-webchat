@@ -1,65 +1,81 @@
-import AudioRecorder from './AudioRecorder';
-
-type recognitionDataCb = (text: string, final: boolean) => void;
-type sttAvailableChangeCb = (available: boolean) => void;
+type ttsAvailableChangeCb = (available: boolean) => void;
 type activeChangeCb = (active: boolean) => void;
 
-interface recognitionResponse {
-    partial?: string;
-    text?: string;
+interface ttsConfig {
+    voice?: string;
 }
 
-class STTController {
-    protected active: boolean;
-    protected audioRecorder: AudioRecorder;
-    protected sttServerUrl: string;
-    protected ws: WebSocket | null;
-    protected sttAvailable: boolean;
-    protected reconnectTimeoutId: NodeJS.Timeout | null;
-    protected silenceStartTs: number
-    protected recognizedText: string
-    stopOnSilence: boolean
-    stopOnSilenceDuration: number
-    onRecognitionData: recognitionDataCb | null;
-    onSttAvailableChange: sttAvailableChangeCb | null;
-    onActiveChange: activeChangeCb | null;
-
-    constructor(sttServerUrl?: string) {
-        this.active = false;
-        this.audioRecorder = new AudioRecorder();
-        this.sttServerUrl = sttServerUrl || 'ws://localhost:2700';
-        this.ws = null;
-        this.sttAvailable = false;
-        this.reconnectTimeoutId = null;
-        this.silenceStartTs = 0;
-        this.recognizedText = '';
-        this.stopOnSilence = false;
-        this.stopOnSilenceDuration = 2000;
-        this.onRecognitionData = null;
-        this.onSttAvailableChange = null;
-        this.onActiveChange = null;
-
-        this.initSttServerConn();
+class AsyncCondition {
+    protected resolve: () => void;
+    protected promise: Promise<void>;
+    constructor () {
+      this.resolve = () => {}
+      this.promise = Promise.resolve()
     }
 
-    protected initSttServerConn() {
-        this.ws = new WebSocket(this.sttServerUrl);
+    notify = () => {
+        this.resolve();
+    }
+
+    wait = async () => {
+        await this.promise;
+    }
+
+    lock = async () => {
+        await this.wait();
+        this.promise = new Promise(resolve => this.resolve = resolve);
+    }
+  }
+
+class TTSController {
+    protected active: boolean;
+    protected ttsServerUrl: string;
+    protected ws: WebSocket | null;
+    protected ttsAvailable: boolean;
+    protected reconnectTimeoutId: NodeJS.Timeout | null;
+    protected audioChunks: Array<Blob>;
+    protected trackReady: AsyncCondition;
+    protected trackPlayed: AsyncCondition;
+    protected tracks: Array<Blob>;
+    onTTSAvailableChange: ttsAvailableChangeCb | null;
+    onActiveChange: activeChangeCb | null;
+
+    constructor(ttsServerUrl?: string) {
+        this.active = false;
+        this.ttsServerUrl = ttsServerUrl || 'ws://localhost:2700';
+        this.ws = null;
+        this.ttsAvailable = false;
+        this.reconnectTimeoutId = null;
+        this.audioChunks = [];
+        this.trackReady = new AsyncCondition();
+        this.trackPlayed = new AsyncCondition();
+        this.tracks = [];
+        this.onTTSAvailableChange = null;
+        this.onActiveChange = null;
+
+        this.initTTSServerConn();
+    }
+
+    protected initTTSServerConn() {
+        this.ws = new WebSocket(this.ttsServerUrl);
         this.ws.onopen = (ev: Event) => {
-            this.setSttAvailable(true);
+            this.setTTSAvailable(true);
         };
         this.ws.onmessage = (ev: MessageEvent) => {
             console.log('Response:', ev.data);
+            const audioData: Blob = ev.data;
+
             let recognizedText: string, final: boolean;
             const response: recognitionResponse = JSON.parse(ev.data);
             if (response.hasOwnProperty('partial')) {
                 recognizedText = response.partial;
                 final = false;
             } else if (response.hasOwnProperty('text')) {
-                recognizedText = response.text;;
+                recognizedText = response.text;
                 final = true;
             }
 
-            if (!this.silenceStartTs || (recognizedText !== this.recognizedText)) {
+            if (!this.silenceStartTs || recognizedText !== this.recognizedText) {
                 this.silenceStartTs = Date.now();
                 this.recognizedText = recognizedText;
             } else if (Date.now() - this.silenceStartTs > this.stopOnSilenceDuration) {
@@ -75,19 +91,16 @@ class STTController {
         this.ws.onclose = (ev: CloseEvent) => {
             console.info('Socket closed');
             console.info(ev);
-            // this.setSttAvailable(false);
             this.setActive(false);
-            this.stopRecording();
             if (ev.wasClean) {
                 this.ReconnectAfter(100);
             } else {
-                this.setSttAvailable(false);
+                this.setTTSAvailable(false);
                 this.ReconnectAfter(2000);
             }
         };
         this.ws.onerror = (ev: Event) => {
             console.error('WS error:', ev);
-            this.stopRecording();
         };
     }
 
@@ -99,7 +112,7 @@ class STTController {
         this.reconnectTimeoutId = setTimeout(() => {
             console.info('Reconnecting...');
             this.reconnectTimeoutId = null;
-            this.initSttServerConn();
+            this.initTTSServerConn();
         }, delay_ms);
     }
 
@@ -110,28 +123,42 @@ class STTController {
         }
     }
 
-    protected setSttAvailable(available: boolean) {
-        this.sttAvailable = available;
-        if (this.onSttAvailableChange) {
-            this.onSttAvailableChange(available);
+    protected setTTSAvailable(available: boolean) {
+        this.ttsAvailable = available;
+        if (this.onTTSAvailableChange) {
+            this.onTTSAvailableChange(available);
         }
     }
 
-    protected stopRecording() {
-        this.audioRecorder.onAudioChunk = null;
-        this.audioRecorder.stop();
-    }
-
-    isSttAvalable = () => this.sttAvailable;
+    isTTSAvalable = () => this.ttsAvailable;
 
     isActive = () => this.active;
+
+    speak = async (text: string, config?: ttsConfig) => {
+        if (!this.ttsAvailable) {
+            return;
+        }
+        await this.trackReady.lock();
+        const trackReady = new Promise(resolve => {
+            if (config) {
+                this.ws.send(
+                    JSON.stringify({
+                        config,
+                    })
+                );
+            }
+            this.ws.send(text);
+        });
+        await this.trackReady.wait();
+
+    };
 
     start = async () => {
         if (this.active) {
             console.warn('STTController already started!');
             return;
         }
-        if (!this.sttAvailable) {
+        if (!this.ttsAvailable) {
             console.warn('STT unavailable!');
             return;
         }
@@ -159,14 +186,14 @@ class STTController {
 
     stop = (immediatly: boolean = false) => {
         console.log('stop()');
-        if (!this.active || !this.sttAvailable) {
+        if (!this.active || !this.ttsAvailable) {
             return;
         }
         this.stopRecording();
         if (immediatly) {
-            this.ws.close();
-        } else {
             this.ws.send('{"eof" : 1}');
+        } else {
+            this.ws.close();
         }
         this.setActive(false);
         console.log('stopped');
@@ -176,10 +203,10 @@ class STTController {
         return this.audioRecorder.getAudioData();
     };
 
-    setSttUrl = (sttUrl: string) => {
+    setTTSUrl = (ttsUrl: string) => {
         this.stop(false);
-        this.sttServerUrl = sttUrl;
-        this.initSttServerConn();
+        this.ttsServerUrl = ttsUrl;
+        this.initTTSServerConn();
     };
 
     setAudioChunkSize = (chunkSize: number) => {

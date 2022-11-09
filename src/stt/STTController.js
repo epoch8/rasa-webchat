@@ -42,18 +42,18 @@ class STTController {
             yield this.audioRecorder.start();
             console.log('started');
         });
-        this.stop = (getFinalResult = true) => {
+        this.stop = (immediatly = false) => {
             console.log('stop()');
             if (!this.active || !this.sttAvailable) {
                 return;
             }
-            if (getFinalResult) {
+            this.stopRecording();
+            if (immediatly) {
                 this.ws.send('{"eof" : 1}');
             }
             else {
-                this.audioRecorder.onAudioChunk = null;
+                this.ws.close();
             }
-            this.stopRecording();
             this.setActive(false);
             console.log('stopped');
         };

@@ -103,7 +103,6 @@ const ConnectedWidget = forwardRef((props, ref) => {
       storage,
       props.docViewer,
       props.onWidgetEvent,
-      sttControllerRef
     );
     store.current.socketRef = instanceSocket.current.marker;
     store.current.socket = instanceSocket.current;
@@ -182,9 +181,9 @@ const ConnectedWidget = forwardRef((props, ref) => {
     }
   };
 
-  const stopVoiceInput = (waitForResult) => {
+  const stopVoiceInput = (immediatly = false) => {
     if (sttControllerRef.current && sttControllerRef.current.isActive()) {
-      sttControllerRef.current.stop(!!waitForResult);
+      sttControllerRef.current.stop(immediatly);
     }
   };
 

@@ -26,8 +26,7 @@ function initStore(
   socket,
   storage,
   docViewer = false,
-  onWidgetEvent,
-  sttControllerRef,
+  onWidgetEvent
 ) {
   const customMiddleWare = store => next => (action) => {
     const localSession = getLocalSession(storage, SESSION_NAME);
@@ -120,7 +119,7 @@ function initStore(
     behavior: behavior(connectingText, storage, docViewer, onWidgetEvent),
     messages: messages(storage),
     metadata: metadata(storage),
-    voiceInput: voiceInput(sttControllerRef)
+    voiceInput: voiceInput()
   });
 
 
