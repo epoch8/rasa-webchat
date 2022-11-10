@@ -173,7 +173,11 @@ export const rasaWebchatProTypes = {
     audioChunkSize: PropTypes.number,
     stopOnSilenceDuration: PropTypes.number
   }),
-  voiceInputStopOnSilence: PropTypes.bool
+  voiceInputStopOnSilence: PropTypes.bool,
+  ttsEnabled: PropTypes.bool,
+  ttsConfig: PropTypes.shape({
+    serverUrl: PropTypes.string
+  })
 };
 
 RasaWebchatProWithRules.propTypes = {
@@ -229,7 +233,11 @@ export const rasaWebchatProDefaultTypes = {
     audioChunkSize: 2048,
     stopOnSilenceDuration: 2000
   },
-  voiceInputStopOnSilence: false
+  voiceInputStopOnSilence: false,
+  ttsEnabled: false,
+  ttsConfig: {
+    serverUrl: 'ws://localhost:2700'
+  }
 };
 
 export default React.forwardRef((props, ref) => (

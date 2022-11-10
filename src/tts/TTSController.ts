@@ -71,19 +71,23 @@ class TTSController {
 
     protected playNextTrack = () => {
         if (this.playing || this.tracks.length === 0) {
+            console.log('this.playing || this.tracks.length === 0');
             return;
         }
+        console.log('Playing next track');
         this.playing = true;
         const track = this.tracks.pop();
         const audioURL = window.URL.createObjectURL(track);
         this.audioElement = new Audio(audioURL);
         this.audioElement.oncanplaythrough = event => {
+            console.log('oncanplaythrough');
             this.audioElement.play();
         };
         this.audioElement.onended = event => {
             window.URL.revokeObjectURL(audioURL);
             this.playing = false;
             this.audioElement = null;
+            console.log('onended');
             this.playNextTrack();
         };
     };

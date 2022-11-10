@@ -151,7 +151,7 @@ class Widget extends Component {
   }
 
   handleMessageReceived(messageWithMetadata) {
-    const { dispatch, isChatOpen, disableTooltips } = this.props;
+    const { dispatch, isChatOpen, disableTooltips, playMessage } = this.props;
 
     // we extract metadata so we are sure it does not interfer with type checking of the message
     const { metadata, ...message } = messageWithMetadata;
@@ -169,6 +169,7 @@ class Widget extends Component {
     } else {
       this.messages.push(message);
     }
+    playMessage(message);
   }
 
   popLastMessage() {
@@ -668,7 +669,8 @@ Widget.propTypes = {
   openOnStart: PropTypes.bool,
   wasOpened: PropTypes.bool,
   startVoiceInput: PropTypes.func,
-  stopVoiceInput: PropTypes.func
+  stopVoiceInput: PropTypes.func,
+  playMessage: PropTypes.func
 };
 
 Widget.defaultProps = {
@@ -701,7 +703,8 @@ Widget.defaultProps = {
   }`,
   wasOpened: false,
   startVoiceInput: () => {},
-  stopVoiceInput: () => {}
+  stopVoiceInput: () => {},
+  playMessage: () => {}
 };
 
 export default connect(mapStateToProps, null, null, { forwardRef: true })(Widget);

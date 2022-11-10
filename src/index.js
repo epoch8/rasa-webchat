@@ -9,6 +9,7 @@ import * as actions from './store/actions';
 import socket from './socket';
 import ThemeContext from '../src/components/Widget/ThemeContext';
 import STTController from './stt/STTController';
+import TTSController from './tts/TTSController';
 // eslint-disable-next-line import/no-mutable-exports
 
 const ConnectedWidget = forwardRef((props, ref) => {
@@ -78,6 +79,7 @@ const ConnectedWidget = forwardRef((props, ref) => {
   const instanceSocket = useRef({});
   const store = useRef(null);
   const sttControllerRef = useRef(null);
+  const ttsControllerRef = useRef(null);
 
   if (!instanceSocket.current.url && !(store && store.current && store.current.socketRef)) {
     instanceSocket.current = new Socket(
@@ -102,7 +104,7 @@ const ConnectedWidget = forwardRef((props, ref) => {
       instanceSocket.current,
       storage,
       props.docViewer,
-      props.onWidgetEvent,
+      props.onWidgetEvent
     );
     store.current.socketRef = instanceSocket.current.marker;
     store.current.socket = instanceSocket.current;
@@ -114,6 +116,10 @@ const ConnectedWidget = forwardRef((props, ref) => {
       if (sttControllerRef.current) {
         sttControllerRef.current.cleanup();
         sttControllerRef.current = null;
+      }
+      if (ttsControllerRef.current) {
+        ttsControllerRef.current.cleanup();
+        ttsControllerRef.current = null;
       }
     },
     []
@@ -171,6 +177,18 @@ const ConnectedWidget = forwardRef((props, ref) => {
     store.current.dispatch(actions.setStopOnSilence(props.voiceInputStopOnSilence));
   }, [props.voiceInputStopOnSilence, sttControllerRef.current]);
 
+  useEffect(() => {
+    if (props.ttsEnabled && !ttsControllerRef.current) {
+      ttsControllerRef.current = new TTSController();
+    } else if (!props.ttsEnabled && ttsControllerRef.current) {
+      ttsControllerRef.current.cleanup();
+      ttsControllerRef.current = null;
+    }
+    if (ttsControllerRef.current) {
+      ttsControllerRef.current.ttsServerUrl = props.ttsConfig.serverUrl;
+    }
+  }, [ttsControllerRef.current, props.ttsEnabled, props.ttsConfig.serverUrl]);
+
   const startVoiceInput = () => {
     if (
       sttControllerRef.current &&
@@ -184,6 +202,12 @@ const ConnectedWidget = forwardRef((props, ref) => {
   const stopVoiceInput = (immediatly = false) => {
     if (sttControllerRef.current && sttControllerRef.current.isActive()) {
       sttControllerRef.current.stop(immediatly);
+    }
+  };
+
+  const playMessage = ({ text }) => {
+    if (ttsControllerRef.current && text) {
+      ttsControllerRef.current.enqueue(text);
     }
   };
 
@@ -235,6 +259,7 @@ const ConnectedWidget = forwardRef((props, ref) => {
           openOnStart={props.openOnStart}
           startVoiceInput={startVoiceInput}
           stopVoiceInput={stopVoiceInput}
+          playMessage={playMessage}
         />
       </ThemeContext.Provider>
     </Provider>
@@ -297,7 +322,11 @@ ConnectedWidget.propTypes = {
     audioChunkSize: PropTypes.number,
     stopOnSilenceDuration: PropTypes.number
   }),
-  voiceInputStopOnSilence: PropTypes.bool
+  voiceInputStopOnSilence: PropTypes.bool,
+  ttsEnabled: PropTypes.bool,
+  ttsConfig: PropTypes.shape({
+    serverUrl: PropTypes.string
+  })
 };
 
 ConnectedWidget.defaultProps = {
@@ -352,7 +381,11 @@ ConnectedWidget.defaultProps = {
     audioChunkSize: 2048,
     stopOnSilenceDuration: 2000
   },
-  voiceInputStopOnSilence: false
+  voiceInputStopOnSilence: false,
+  ttsEnabled: false,
+  ttsConfig: {
+    serverUrl: 'ws://localhost:2700'
+  }
 };
 
 export default ConnectedWidget;
