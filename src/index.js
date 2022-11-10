@@ -112,7 +112,7 @@ const ConnectedWidget = forwardRef((props, ref) => {
 
   useEffect(
     () => () => {
-      console.log(console.log('before unmount'));
+      console.log('before unmount');
       if (sttControllerRef.current) {
         sttControllerRef.current.cleanup();
         sttControllerRef.current = null;
@@ -126,7 +126,7 @@ const ConnectedWidget = forwardRef((props, ref) => {
   );
 
   useEffect(() => {
-    console.log('[props.voiceInputEnabled]');
+    // console.log('[props.voiceInputEnabled]');
     if (!sttControllerRef.current && props.voiceInputEnabled) {
       sttControllerRef.current = new STTController(props.voiceInputConfig.serverUrl);
       sttControllerRef.current.onSttAvailableChange = (available) => {
@@ -151,14 +151,14 @@ const ConnectedWidget = forwardRef((props, ref) => {
   }, [props.voiceInputEnabled]);
 
   useEffect(() => {
-    console.log('[props.voiceInputConfig.serverUrl, sttControllerRef.current]');
+    // console.log('[props.voiceInputConfig.serverUrl, sttControllerRef.current]');
     if (sttControllerRef.current) {
       sttControllerRef.current.setSttUrl(props.voiceInputConfig.serverUrl);
     }
   }, [props.voiceInputConfig.serverUrl, sttControllerRef.current]);
 
   useEffect(() => {
-    console.log('[props.voiceInputConfig.audioChunkSize, sttControllerRef.current]');
+    // console.log('[props.voiceInputConfig.audioChunkSize, sttControllerRef.current]');
     if (sttControllerRef.current && props.voiceInputConfig.audioChunkSize) {
       sttControllerRef.current.setAudioChunkSize(props.voiceInputConfig.audioChunkSize);
     }
@@ -207,7 +207,7 @@ const ConnectedWidget = forwardRef((props, ref) => {
 
   const playMessage = ({ text }) => {
     if (ttsControllerRef.current && text) {
-      ttsControllerRef.current.enqueue(text);
+      ttsControllerRef.current.enqueue(text, props.ttsConfig);
     }
   };
 

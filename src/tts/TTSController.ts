@@ -1,6 +1,7 @@
 type activeChangeCb = (active: boolean) => void;
 
 interface ttsConfig {
+    apiKey?: string;
     voice?: string;
 }
 
@@ -16,7 +17,7 @@ class TTSController {
     protected tracks: Array<Blob>;
     protected tasks: Array<ttsTask>;
     protected playing: boolean;
-    protected audioElement: HTMLAudioElement | null
+    protected audioElement: HTMLAudioElement | null;
     ttsServerUrl: string;
     onActiveChange: activeChangeCb | null;
 
@@ -45,12 +46,16 @@ class TTSController {
         this.ws.onopen = (ev: Event) => {
             this.setActive(true);
             if (task.config) {
-                this.ws.send(JSON.stringify(task.config));
+                const { apiKey, ...config } = task.config;
+                if (apiKey) {
+                    this.ws.send(apiKey);
+                }
+                this.ws.send(JSON.stringify({ config }));
             }
             this.ws.send(task.text);
         };
         this.ws.onmessage = (ev: MessageEvent) => {
-            console.log('Response:', ev.data);
+            // console.log('Response:', ev.data);
             const audioData: Blob = ev.data;
             this.audioChunks.push(audioData);
         };
@@ -71,7 +76,7 @@ class TTSController {
 
     protected playNextTrack = () => {
         if (this.playing || this.tracks.length === 0) {
-            console.log('this.playing || this.tracks.length === 0');
+            // console.log('this.playing || this.tracks.length === 0');
             return;
         }
         console.log('Playing next track');
