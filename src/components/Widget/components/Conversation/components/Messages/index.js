@@ -125,14 +125,27 @@ class Messages extends Component {
           }
           return;
         }
-        if (index === this.state.ttsMsgId || !message.get('text')) {
+        if (index === this.state.ttsMsgId) {
           this.setState({ ttsMsgId: null });
           ttsControllerRef.current.cleanup();
         } else {
+          const textParts = [];
+          const text = message.get('text');
+          if (text) {
+            textParts.push(text);
+          }
+          const buttons = message.get('quick_replies');
+          if (buttons) {
+            textParts.push(...buttons.map(reply => reply.get('title')));
+          }
+          const ttsText = textParts.join('.\n');
+          if (!ttsText) {
+            return;
+          }
           this.setState({ ttsMsgId: index });
           ttsControllerRef.current.cleanup();
           ttsControllerRef.current.enqueue(
-            message.get('text'),
+            ttsText,
             ttsConfig,
             () => { this.setState({ ttsMsgId: null }); }
           );
@@ -140,7 +153,8 @@ class Messages extends Component {
       };
 
       const renderMessage = (message, index) => {
-        const isText = message.get('type') === MESSAGES_TYPES.TEXT;
+        const msgType = message.get('type');
+        const isText = msgType === MESSAGES_TYPES.TEXT || msgType === MESSAGES_TYPES.BUTTONS;
         return (
           <div className={`rw-message ${profileAvatar ? 'rw-with-avatar' : ''}`} key={index}>
             {
