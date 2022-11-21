@@ -151,7 +151,14 @@ class Widget extends Component {
   }
 
   handleMessageReceived(messageWithMetadata) {
-    const { dispatch, isChatOpen, disableTooltips, ttsNewMessages, playMessage } = this.props;
+    const {
+      dispatch,
+      isChatOpen,
+      disableTooltips,
+      ttsNewMessages,
+      ttsControllerRef,
+      ttsConfig
+    } = this.props;
 
     // we extract metadata so we are sure it does not interfer with type checking of the message
     const { metadata, ...message } = messageWithMetadata;
@@ -169,8 +176,8 @@ class Widget extends Component {
     } else {
       this.messages.push(message);
     }
-    if (ttsNewMessages) {
-      playMessage(message);
+    if (ttsNewMessages && ttsControllerRef.current && message.text) {
+      ttsControllerRef.current.enqueue(message.text, ttsConfig);
     }
   }
 
@@ -613,7 +620,8 @@ class Widget extends Component {
         startVoiceInput={this.props.startVoiceInput}
         stopVoiceInput={this.props.stopVoiceInput}
         ttsEnabled={this.props.ttsEnabled}
-        playMessage={this.props.playMessage}
+        ttsConfig={this.props.ttsConfig}
+        ttsControllerRef={this.props.ttsControllerRef}
       />
     );
   }
@@ -676,7 +684,8 @@ Widget.propTypes = {
   ttsNewMessages: PropTypes.bool,
   startVoiceInput: PropTypes.func,
   stopVoiceInput: PropTypes.func,
-  playMessage: PropTypes.func
+  ttsConfig: PropTypes.shape({}),
+  ttsControllerRef: PropTypes.shape({})
 };
 
 Widget.defaultProps = {
@@ -711,7 +720,8 @@ Widget.defaultProps = {
   ttsNewMessages: false,
   startVoiceInput: () => {},
   stopVoiceInput: () => {},
-  playMessage: () => {}
+  ttsConfig: {},
+  ttsControllerRef: {}
 };
 
 export default connect(mapStateToProps, null, null, { forwardRef: true })(Widget);

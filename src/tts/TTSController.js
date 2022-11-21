@@ -14,58 +14,56 @@ Object.defineProperty(exports, "__esModule", { value: true });
 class TTSController {
     constructor(ttsServerUrl) {
         this.playNextTrack = () => {
-            if (this.playing || this.tracks.length === 0) {
-                // console.log('this.playing || this.tracks.length === 0');
+            if (this.playing || this.audioTasks.length === 0) {
                 return;
             }
             console.log('Playing next track');
             this.playing = true;
-            const track = this.tracks.pop();
-            const audioURL = window.URL.createObjectURL(track);
-            this.audioElement = new Audio(audioURL);
-            this.audioElement.oncanplaythrough = event => {
-                console.log('oncanplaythrough');
-                this.audioElement.play();
-            };
+            const audioTask = this.audioTasks.pop();
+            this.audioURL = window.URL.createObjectURL(audioTask.audioData);
+            this.audioElement.src = this.audioURL;
             this.audioElement.onended = event => {
-                window.URL.revokeObjectURL(audioURL);
-                this.playing = false;
-                this.audioElement = null;
+                this.closeAudio();
                 console.log('onended');
-                this.playNextTrack();
+                if (audioTask.ttsTask.cb) {
+                    audioTask.ttsTask.cb(audioTask.ttsTask);
+                }
+                if (this.audioTasks.length === 0) {
+                    if (this.onTracksPlayed) {
+                        this.onTracksPlayed();
+                    }
+                }
+                else {
+                    this.playNextTrack();
+                }
             };
+            this.audioElement.load();
+            this.audioElement.play();
+            console.log('playing');
         };
         this.isActive = () => this.active;
-        this.enqueue = (text, config) => {
-            this.tasks.push({ text, config });
+        this.enqueue = (text, config, onTrackPlayed) => {
+            this.ttsTasks.push({ text, config, cb: onTrackPlayed });
             if (!this.ws) {
                 this.processNextTask();
             }
         };
         this.cleanup = () => {
-            if (this.ws) {
-                this.ws.onopen = null;
-                this.ws.onmessage = null;
-                this.ws.onclose = null;
-                this.ws.onerror = null;
-                this.ws.close();
-            }
-            if (this.audioElement) {
-                this.audioElement.pause();
-                this.audioElement = null;
-            }
+            this.closeSocket();
+            this.closeAudio();
             this.audioChunks = [];
-            this.tracks = [];
-            this.tasks = [];
+            this.audioTasks = [];
+            this.ttsTasks = [];
         };
         this.active = false;
         this.ttsServerUrl = ttsServerUrl || 'ws://localhost:2700';
         this.ws = null;
         this.audioChunks = [];
-        this.tracks = [];
-        this.tasks = [];
+        this.audioTasks = [];
+        this.ttsTasks = [];
         this.playing = false;
-        this.audioElement = null;
+        this.audioElement = new Audio();
+        this.audioURL = null;
         this.onActiveChange = null;
     }
     processNextTask() {
@@ -73,7 +71,7 @@ class TTSController {
             console.error('WS alredy openned!');
             return;
         }
-        const task = this.tasks.pop();
+        const task = this.ttsTasks.pop();
         if (!task) {
             return;
         }
@@ -99,7 +97,7 @@ class TTSController {
             console.info(ev);
             this.setActive(false);
             this.ws = null;
-            this.tracks.push(new Blob(this.audioChunks));
+            this.audioTasks.push({ audioData: new Blob(this.audioChunks), ttsTask: task });
             this.audioChunks = [];
             this.playNextTrack();
             this.processNextTask();
@@ -113,6 +111,24 @@ class TTSController {
         if (this.onActiveChange) {
             this.onActiveChange(active);
         }
+    }
+    closeSocket() {
+        if (this.ws) {
+            this.ws.onopen = null;
+            this.ws.onmessage = null;
+            this.ws.onclose = null;
+            this.ws.onerror = null;
+            this.ws.close();
+            this.ws = null;
+        }
+    }
+    closeAudio() {
+        this.audioElement.src = '';
+        if (this.audioURL) {
+            window.URL.revokeObjectURL(this.audioURL);
+            this.audioURL = null;
+        }
+        this.playing = false;
     }
 }
 exports.default = TTSController;

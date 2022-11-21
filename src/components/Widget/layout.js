@@ -45,7 +45,8 @@ const WidgetLayout = (props) => {
           startVoiceInput={props.startVoiceInput}
           stopVoiceInput={props.stopVoiceInput}
           ttsEnabled={props.ttsEnabled}
-          playMessage={props.playMessage}
+          ttsConfig={props.ttsConfig}
+          ttsControllerRef={props.ttsControllerRef}
         />
       )}
       {!props.embedded && (
@@ -101,7 +102,8 @@ WidgetLayout.propTypes = {
   startVoiceInput: PropTypes.func,
   stopVoiceInput: PropTypes.func,
   ttsEnabled: PropTypes.bool,
-  playMessage: PropTypes.func
+  ttsConfig: PropTypes.shape({}),
+  ttsControllerRef: PropTypes.shape({})
 };
 
 export default connect(mapStateToProps)(WidgetLayout);

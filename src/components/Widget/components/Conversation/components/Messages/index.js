@@ -31,12 +31,19 @@ const scrollToBottom = () => {
 };
 
 class Messages extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { ttsMsgId: null };
+  }
+
   componentDidMount() {
     scrollToBottom();
   }
 
-  componentDidUpdate() {
-    scrollToBottom();
+  componentDidUpdate(prevProps) {
+    if (prevProps.messages !== this.props.messages) {
+      scrollToBottom();
+    }
   }
 
   getComponentToRender = (message, index, isLast) => {
@@ -79,7 +86,13 @@ class Messages extends Component {
   }
 
   render() {
-    const { displayTypingIndication, profileAvatar, ttsEnabled } = this.props;
+    const {
+      displayTypingIndication,
+      profileAvatar,
+      ttsEnabled,
+      ttsConfig,
+      ttsControllerRef
+    } = this.props;
 
     const renderMessages = () => {
       const {
@@ -105,8 +118,28 @@ class Messages extends Component {
           : null;
       };
 
+      const onPlayButtonClick = (message, index) => {
+        if (!ttsControllerRef.current) {
+          if (this.state.ttsMsgId !== null) {
+            this.setState({ ttsMsgId: null });
+          }
+          return;
+        }
+        if (index === this.state.ttsMsgId || !message.get('text')) {
+          this.setState({ ttsMsgId: null });
+          ttsControllerRef.current.cleanup();
+        } else {
+          this.setState({ ttsMsgId: index });
+          ttsControllerRef.current.cleanup();
+          ttsControllerRef.current.enqueue(
+            message.get('text'),
+            ttsConfig,
+            () => { this.setState({ ttsMsgId: null }); }
+          );
+        }
+      };
+
       const renderMessage = (message, index) => {
-        console.log(message);
         const isText = message.get('type') === MESSAGES_TYPES.TEXT;
         return (
           <div className={`rw-message ${profileAvatar ? 'rw-with-avatar' : ''}`} key={index}>
@@ -117,7 +150,11 @@ class Messages extends Component {
             }
             <div style={{ display: 'flex', width: '100%', alignItems: 'flex-start', justifyContent: 'space-between' }}>
               {this.getComponentToRender(message, index, index === messages.size - 1)}
-              {ttsEnabled && isText && <PlayButton />}
+              {ttsEnabled && isText &&
+              <PlayButton
+                active={this.state.ttsMsgId === index}
+                onClick={() => onPlayButtonClick(message, index)}
+              />}
             </div>
             {renderMessageDate(message)}
           </div>
@@ -178,7 +215,8 @@ Messages.propTypes = {
   showMessageDate: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
   displayTypingIndication: PropTypes.bool,
   ttsEnabled: PropTypes.bool,
-  playMessage: PropTypes.func
+  ttsConfig: PropTypes.shape({}),
+  ttsControllerRef: PropTypes.shape({})
 };
 
 Message.defaultTypes = {

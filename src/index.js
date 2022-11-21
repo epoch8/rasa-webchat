@@ -205,12 +205,6 @@ const ConnectedWidget = forwardRef((props, ref) => {
     }
   };
 
-  const playMessage = ({ text }) => {
-    if (ttsControllerRef.current && text) {
-      ttsControllerRef.current.enqueue(text, props.ttsConfig);
-    }
-  };
-
   return (
     <Provider store={store.current}>
       <ThemeContext.Provider
@@ -261,7 +255,8 @@ const ConnectedWidget = forwardRef((props, ref) => {
           ttsNewMessages={props.ttsNewMessages}
           startVoiceInput={startVoiceInput}
           stopVoiceInput={stopVoiceInput}
-          playMessage={playMessage}
+          ttsConfig={props.ttsConfig}
+          ttsControllerRef={ttsControllerRef}
         />
       </ThemeContext.Provider>
     </Provider>

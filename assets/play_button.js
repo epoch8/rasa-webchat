@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import React, { useContext } from 'react';
 import ThemeContext from '../src/components/Widget/ThemeContext';
 
-function PlayButton({ active }) {
+function PlayButton({ active, onClick }) {
   const { mainColor } = useContext(ThemeContext);
 
   const playSvg = (
@@ -22,6 +22,7 @@ function PlayButton({ active }) {
       width="48px"
       style={{ fill: mainColor }}
       className="rw-play-icon"
+      onClick={onClick}
     >
       {active ? stopSvg : playSvg}
     </svg>
@@ -29,7 +30,8 @@ function PlayButton({ active }) {
 }
 
 PlayButton.propTypes = {
-  active: PropTypes.bool
+  active: PropTypes.bool,
+  onClick: PropTypes.func
 };
 
 export default PlayButton;

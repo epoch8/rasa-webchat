@@ -8,28 +8,39 @@ interface ttsConfig {
 interface ttsTask {
     text: string;
     config?: ttsConfig;
+    cb?: trackPlayedCb;
 }
+
+interface audioTask {
+    audioData: Blob;
+    ttsTask: ttsTask;
+}
+
+type trackPlayedCb = (task: ttsTask) => void;
 
 class TTSController {
     protected active: boolean;
     protected ws: WebSocket | null;
     protected audioChunks: Array<Blob>;
-    protected tracks: Array<Blob>;
-    protected tasks: Array<ttsTask>;
+    protected audioTasks: Array<audioTask>;
+    protected ttsTasks: Array<ttsTask>;
     protected playing: boolean;
     protected audioElement: HTMLAudioElement | null;
+    protected audioURL: string | null;
     ttsServerUrl: string;
     onActiveChange: activeChangeCb | null;
+    onTracksPlayed: () => void | null;
 
     constructor(ttsServerUrl?: string) {
         this.active = false;
         this.ttsServerUrl = ttsServerUrl || 'ws://localhost:2700';
         this.ws = null;
         this.audioChunks = [];
-        this.tracks = [];
-        this.tasks = [];
+        this.audioTasks = [];
+        this.ttsTasks = [];
         this.playing = false;
-        this.audioElement = null;
+        this.audioElement = new Audio();
+        this.audioURL = null;
         this.onActiveChange = null;
     }
 
@@ -38,7 +49,7 @@ class TTSController {
             console.error('WS alredy openned!');
             return;
         }
-        const task = this.tasks.pop();
+        const task = this.ttsTasks.pop();
         if (!task) {
             return;
         }
@@ -64,7 +75,7 @@ class TTSController {
             console.info(ev);
             this.setActive(false);
             this.ws = null;
-            this.tracks.push(new Blob(this.audioChunks));
+            this.audioTasks.push({ audioData: new Blob(this.audioChunks), ttsTask: task });
             this.audioChunks = [];
             this.playNextTrack();
             this.processNextTask();
@@ -75,26 +86,31 @@ class TTSController {
     }
 
     protected playNextTrack = () => {
-        if (this.playing || this.tracks.length === 0) {
-            // console.log('this.playing || this.tracks.length === 0');
+        if (this.playing || this.audioTasks.length === 0) {
             return;
         }
         console.log('Playing next track');
         this.playing = true;
-        const track = this.tracks.pop();
-        const audioURL = window.URL.createObjectURL(track);
-        this.audioElement = new Audio(audioURL);
-        this.audioElement.oncanplaythrough = event => {
-            console.log('oncanplaythrough');
-            this.audioElement.play();
-        };
+        const audioTask = this.audioTasks.pop();
+        this.audioURL = window.URL.createObjectURL(audioTask.audioData);
+        this.audioElement.src = this.audioURL;
         this.audioElement.onended = event => {
-            window.URL.revokeObjectURL(audioURL);
-            this.playing = false;
-            this.audioElement = null;
+            this.closeAudio();
             console.log('onended');
-            this.playNextTrack();
+            if (audioTask.ttsTask.cb) {
+                audioTask.ttsTask.cb(audioTask.ttsTask);
+            }
+            if (this.audioTasks.length === 0) {
+                if (this.onTracksPlayed) {
+                    this.onTracksPlayed();
+                }
+            } else {
+                this.playNextTrack();
+            }
         };
+        this.audioElement.load();
+        this.audioElement.play();
+        console.log('playing');
     };
 
     protected setActive(active: boolean) {
@@ -104,30 +120,41 @@ class TTSController {
         }
     }
 
-    isActive = () => this.active;
-
-    enqueue = (text: string, config?: ttsConfig) => {
-        this.tasks.push({ text, config });
-        if (!this.ws) {
-            this.processNextTask();
-        }
-    };
-
-    cleanup = () => {
+    protected closeSocket() {
         if (this.ws) {
             this.ws.onopen = null;
             this.ws.onmessage = null;
             this.ws.onclose = null;
             this.ws.onerror = null;
             this.ws.close();
+            this.ws = null;
         }
-        if (this.audioElement) {
-            this.audioElement.pause();
-            this.audioElement = null;
+    }
+
+    protected closeAudio() {
+        this.audioElement.src = '';
+        if (this.audioURL) {
+            window.URL.revokeObjectURL(this.audioURL);
+            this.audioURL = null;
         }
+        this.playing = false;
+    }
+
+    isActive = () => this.active;
+
+    enqueue = (text: string, config?: ttsConfig, onTrackPlayed?: trackPlayedCb) => {
+        this.ttsTasks.push({ text, config, cb: onTrackPlayed });
+        if (!this.ws) {
+            this.processNextTask();
+        }
+    };
+
+    cleanup = () => {
+        this.closeSocket();
+        this.closeAudio();
         this.audioChunks = [];
-        this.tracks = [];
-        this.tasks = [];
+        this.audioTasks = [];
+        this.ttsTasks = [];
     };
 }
 

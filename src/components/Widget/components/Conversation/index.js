@@ -32,7 +32,8 @@ const Conversation = (props) => {
         customComponent={props.customComponent}
         showMessageDate={props.showMessageDate}
         ttsEnabled={props.ttsEnabled}
-        playMessage={props.playMessage}
+        ttsConfig={props.ttsConfig}
+        ttsControllerRef={props.ttsControllerRef}
       />
       <Sender
         sendMessage={props.sendMessage}
@@ -65,7 +66,8 @@ Conversation.propTypes = {
   startVoiceInput: PropTypes.func,
   stopVoiceInput: PropTypes.func,
   ttsEnabled: PropTypes.bool,
-  playMessage: PropTypes.func
+  ttsConfig: PropTypes.shape({}),
+  ttsControllerRef: PropTypes.shape({})
 };
 
 export default Conversation;
