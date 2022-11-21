@@ -257,6 +257,8 @@ const ConnectedWidget = forwardRef((props, ref) => {
           defaultHighlightAnimation={props.defaultHighlightAnimation}
           defaultHighlightClassname={props.defaultHighlightClassname}
           openOnStart={props.openOnStart}
+          ttsEnabled={props.ttsEnabled}
+          ttsNewMessages={props.ttsNewMessages}
           startVoiceInput={startVoiceInput}
           stopVoiceInput={stopVoiceInput}
           playMessage={playMessage}
@@ -324,6 +326,7 @@ ConnectedWidget.propTypes = {
   }),
   voiceInputStopOnSilence: PropTypes.bool,
   ttsEnabled: PropTypes.bool,
+  ttsNewMessages: PropTypes.bool,
   ttsConfig: PropTypes.shape({
     serverUrl: PropTypes.string
   })
@@ -383,6 +386,7 @@ ConnectedWidget.defaultProps = {
   },
   voiceInputStopOnSilence: false,
   ttsEnabled: false,
+  ttsNewMessages: false,
   ttsConfig: {
     serverUrl: 'ws://localhost:2700'
   }

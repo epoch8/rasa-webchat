@@ -175,6 +175,7 @@ export const rasaWebchatProTypes = {
   }),
   voiceInputStopOnSilence: PropTypes.bool,
   ttsEnabled: PropTypes.bool,
+  ttsNewMessages: PropTypes.bool,
   ttsConfig: PropTypes.shape({
     serverUrl: PropTypes.string
   })
@@ -235,6 +236,7 @@ export const rasaWebchatProDefaultTypes = {
   },
   voiceInputStopOnSilence: false,
   ttsEnabled: false,
+  ttsNewMessages: false,
   ttsConfig: {
     serverUrl: 'ws://localhost:2700'
   }

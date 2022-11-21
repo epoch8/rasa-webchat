@@ -6,6 +6,7 @@ import { connect } from 'react-redux';
 import { MESSAGES_TYPES } from 'constants';
 import { Video, Image, Message, Carousel, Buttons } from 'messagesComponents';
 
+import PlayButton from 'assets/play_button';
 import './styles.scss';
 import ThemeContext from '../../../../ThemeContext';
 
@@ -78,7 +79,7 @@ class Messages extends Component {
   }
 
   render() {
-    const { displayTypingIndication, profileAvatar } = this.props;
+    const { displayTypingIndication, profileAvatar, ttsEnabled } = this.props;
 
     const renderMessages = () => {
       const {
@@ -104,17 +105,24 @@ class Messages extends Component {
           : null;
       };
 
-      const renderMessage = (message, index) => (
-        <div className={`rw-message ${profileAvatar && 'rw-with-avatar'}`} key={index}>
-          {
-            profileAvatar &&
-            message.get('showAvatar') &&
-            <img src={profileAvatar} className="rw-avatar" alt="profile" />
-          }
-          {this.getComponentToRender(message, index, index === messages.size - 1)}
-          {renderMessageDate(message)}
-        </div>
-      );
+      const renderMessage = (message, index) => {
+        console.log(message);
+        const isText = message.get('type') === MESSAGES_TYPES.TEXT;
+        return (
+          <div className={`rw-message ${profileAvatar ? 'rw-with-avatar' : ''}`} key={index}>
+            {
+              profileAvatar &&
+              message.get('showAvatar') &&
+              <img src={profileAvatar} className="rw-avatar" alt="profile" />
+            }
+            <div style={{ display: 'flex', width: '100%', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+              {this.getComponentToRender(message, index, index === messages.size - 1)}
+              {ttsEnabled && isText && <PlayButton />}
+            </div>
+            {renderMessageDate(message)}
+          </div>
+        );
+      };
 
       messages.forEach((msg, index) => {
         if (msg.get('hidden')) return;
@@ -168,7 +176,9 @@ Messages.propTypes = {
   profileAvatar: PropTypes.string,
   customComponent: PropTypes.func,
   showMessageDate: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
-  displayTypingIndication: PropTypes.bool
+  displayTypingIndication: PropTypes.bool,
+  ttsEnabled: PropTypes.bool,
+  playMessage: PropTypes.func
 };
 
 Message.defaultTypes = {

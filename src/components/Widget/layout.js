@@ -44,6 +44,8 @@ const WidgetLayout = (props) => {
           inputTextFieldHint={props.inputTextFieldHint}
           startVoiceInput={props.startVoiceInput}
           stopVoiceInput={props.stopVoiceInput}
+          ttsEnabled={props.ttsEnabled}
+          playMessage={props.playMessage}
         />
       )}
       {!props.embedded && (
@@ -97,7 +99,9 @@ WidgetLayout.propTypes = {
   showMessageDate: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
   tooltipPayload: PropTypes.string,
   startVoiceInput: PropTypes.func,
-  stopVoiceInput: PropTypes.func
+  stopVoiceInput: PropTypes.func,
+  ttsEnabled: PropTypes.bool,
+  playMessage: PropTypes.func
 };
 
 export default connect(mapStateToProps)(WidgetLayout);

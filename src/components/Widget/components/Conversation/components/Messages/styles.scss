@@ -128,3 +128,11 @@ div#wave {
     transform: translateY(-5px);
   }
 }
+
+.#{$namespace}play-icon {
+  fill: #135afe;
+  transition: fill 0.35s;
+  vertical-align: middle;
+  flex-shrink: 0;
+  margin-left: 0.5em;
+}

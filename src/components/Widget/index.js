@@ -151,7 +151,7 @@ class Widget extends Component {
   }
 
   handleMessageReceived(messageWithMetadata) {
-    const { dispatch, isChatOpen, disableTooltips, playMessage } = this.props;
+    const { dispatch, isChatOpen, disableTooltips, ttsNewMessages, playMessage } = this.props;
 
     // we extract metadata so we are sure it does not interfer with type checking of the message
     const { metadata, ...message } = messageWithMetadata;
@@ -169,7 +169,9 @@ class Widget extends Component {
     } else {
       this.messages.push(message);
     }
-    playMessage(message);
+    if (ttsNewMessages) {
+      playMessage(message);
+    }
   }
 
   popLastMessage() {
@@ -610,6 +612,8 @@ class Widget extends Component {
         tooltipPayload={this.props.tooltipPayload}
         startVoiceInput={this.props.startVoiceInput}
         stopVoiceInput={this.props.stopVoiceInput}
+        ttsEnabled={this.props.ttsEnabled}
+        playMessage={this.props.playMessage}
       />
     );
   }
@@ -668,6 +672,8 @@ Widget.propTypes = {
   messages: ImmutablePropTypes.listOf(ImmutablePropTypes.map),
   openOnStart: PropTypes.bool,
   wasOpened: PropTypes.bool,
+  ttsEnabled: PropTypes.bool,
+  ttsNewMessages: PropTypes.bool,
   startVoiceInput: PropTypes.func,
   stopVoiceInput: PropTypes.func,
   playMessage: PropTypes.func
@@ -702,6 +708,7 @@ Widget.defaultProps = {
     }
   }`,
   wasOpened: false,
+  ttsNewMessages: false,
   startVoiceInput: () => {},
   stopVoiceInput: () => {},
   playMessage: () => {}
