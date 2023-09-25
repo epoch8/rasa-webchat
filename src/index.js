@@ -112,7 +112,6 @@ const ConnectedWidget = forwardRef((props, ref) => {
 
   useEffect(
     () => () => {
-      console.log('before unmount');
       if (sttControllerRef.current) {
         sttControllerRef.current.cleanup();
         sttControllerRef.current = null;
@@ -215,7 +214,8 @@ const ConnectedWidget = forwardRef((props, ref) => {
           userBackgroundColor: props.userBackgroundColor,
           assistTextColor: props.assistTextColor,
           assistBackgoundColor: props.assistBackgoundColor,
-          rectangularWidget: props.rectangularWidget
+          rectangularWidget: props.rectangularWidget,
+          presistQuickReplies: props.presistQuickReplies
         }}
       >
         <Widget
@@ -313,6 +313,7 @@ ConnectedWidget.propTypes = {
   assistBackgoundColor: PropTypes.string,
   rectangularWidget: PropTypes.bool,
   openOnStart: PropTypes.bool,
+  presistQuickReplies: PropTypes.bool,
   voiceInputEnabled: PropTypes.bool,
   voiceInputConfig: PropTypes.shape({
     serverUrl: PropTypes.string,
@@ -373,6 +374,7 @@ ConnectedWidget.defaultProps = {
   assistBackgoundColor: '',
   rectangularWidget: false,
   openOnStart: false,
+  presistQuickReplies: true,
   voiceInputEnabled: false,
   voiceInputConfig: {
     serverUrl: 'ws://localhost:2700',

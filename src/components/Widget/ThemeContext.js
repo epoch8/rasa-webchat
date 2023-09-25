@@ -7,7 +7,8 @@ const ThemeContext = React.createContext({
   userBackgroundColor: '',
   assistTextColor: '',
   assistBackgoundColor: '',
-  rectangularWidget: false
+  rectangularWidget: false,
+  presistQuickReplies: false
 });
 
 export default ThemeContext;

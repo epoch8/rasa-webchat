@@ -167,6 +167,7 @@ export const rasaWebchatProTypes = {
   assistBackgoundColor: PropTypes.string,
   rectangularWidget: PropTypes.bool,
   openOnStart: PropTypes.bool,
+  presistQuickReplies: PropTypes.bool,
   voiceInputEnabled: PropTypes.bool,
   voiceInputConfig: PropTypes.shape({
     serverUrl: PropTypes.string,
@@ -228,6 +229,7 @@ export const rasaWebchatProDefaultTypes = {
   assistBackgoundColor: '',
   rectangularWidget: false,
   openOnStart: false,
+  presistQuickReplies: true,
   voiceInputEnabled: false,
   voiceInputConfig: {
     serverUrl: 'ws://localhost:2700',
